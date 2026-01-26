@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brownian Particles on Curved Manifolds - Full History Recording</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 12px;
+        }
+        h1 { text-align: center; font-size: 20px; margin-bottom: 4px; color: #f8fafc; }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 11px; margin-bottom: 10px; }
+        .container { display: flex; gap: 12px; max-width: 1450px; margin: 0 auto; flex-wrap: wrap; }
+        .controls {
+            width: 250px;
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 12px;
+            flex-shrink: 0;
+            max-height: 92vh;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .main {
+            flex: 1;
+            min-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .right-panel {
+            width: 280px;
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 12px;
+            flex-shrink: 0;
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+        h2 {
+            font-size: 12px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #334155;
+            color: #94a3b8;
+        }
+        .control-group { margin-bottom: 10px; }
+        label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 3px; }
+        input[type="range"] {
+            width: 100%;
+            height: 5px;
+            -webkit-appearance: none;
+            background: #334155;
+            border-radius: 3px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 6px;
+            background: #334155;
+            border: none;
+            border-radius: 5px;
+            color: #e2e8f0;
+            font-size: 11px;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #22c55e; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-secondary { background: #475569; color: white; }
+        canvas { border-radius: 10px; box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5); }
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            flex-wrap: wrap;
+        }
+        .stats span { color: #64748b; }
+        .stats .value { color: #e2e8f0; }
+        .stats .energy-pos { color: #ef4444; }
+        .stats .energy-neg { color: #22c55e; }
+        .stats .time { color: #3b82f6; }
+        .stats .rec { color: #ef4444; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .play-controls { display: flex; gap: 10px; margin-top: 10px; }
+        .play-controls button { width: auto; padding: 8px 24px; border-radius: 18px; margin: 0; }
+        hr { border: none; border-top: 1px solid #334155; margin: 10px 0; }
+        .info-box {
+            background: #334155;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+        .cluster-panel {
+            background: #0f172a;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        .cluster-item {
+            background: #1e3a5f;
+            border-left: 3px solid;
+            border-radius: 4px;
+            padding: 6px;
+            margin-bottom: 4px;
+            font-size: 10px;
+            font-family: monospace;
+        }
+        .plot-canvas {
+            width: 100%;
+            height: 55px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+        .seed-row { display: flex; gap: 6px; }
+        .seed-row > div { flex: 1; }
+        .recording-info { 
+            font-size: 10px; 
+            color: #94a3b8; 
+            margin: 4px 0;
+            padding: 6px;
+            background: #334155;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .geometry-highlight {
+            background: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Brownian Particles on Curved Manifolds</h1>
+    <p class="subtitle">Full history from t=0 | Configurable recording interval | Sphere: 1 band | Cylinder: 4 clusters | Torus: 2 rings</p>
+    
+    <div class="container">
+        <div class="controls">
+            <h2>Geometry</h2>
+            <div class="control-group">
+                <select id="geometry-type" class="geometry-highlight">
+                    <option value="sphere">Sphere S²</option>
+                    <option value="cylinder">Cylinder</option>
+                    <option value="torus">Torus T²</option>
+                </select>
+            </div>
+            
+            <div id="cylinder-params" style="display:none;">
+                <div class="control-group">
+                    <label>Radius: <span id="cyl-r-value">1.00</span></label>
+                    <input type="range" id="cyl-r-slider" min="0.3" max="2" step="0.05" value="1.0">
+                </div>
+                <div class="control-group">
+                    <label>Height: <span id="cyl-h-value">3.00</span></label>
+                    <input type="range" id="cyl-h-slider" min="1" max="6" step="0.1" value="3.0">
+                </div>
+                <div class="control-group">
+                    <label>Z Boundary</label>
+                    <select id="z-boundary">
+                        <option value="periodic">Periodic</option>
+                        <option value="reflective" selected>Reflective</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="torus-params" style="display:none;">
+                <div class="control-group">
+                    <label>Major R: <span id="torus-R-value">1.50</span></label>
+                    <input type="range" id="torus-R-slider" min="0.5" max="3" step="0.05" value="1.5">
+                </div>
+                <div class="control-group">
+                    <label>Minor r: <span id="torus-r-value">0.50</span></label>
+                    <input type="range" id="torus-r-slider" min="0.1" max="1.5" step="0.05" value="0.5">
+                </div>
+            </div>
+            
+            <hr>
+            <h2>Particles</h2>
+            <div class="control-group">
+                <label>N: <span id="n-value">400</span></label>
+                <input type="range" id="n-slider" min="2" max="500" value="400">
+            </div>
+            <div class="control-group">
+                <label>Temperature: <span id="t-value">0.40</span></label>
+                <input type="range" id="t-slider" min="0.01" max="2" step="0.01" value="0.4">
+            </div>
+            
+            <hr>
+            <h2>Couplings φᵢⱼ</h2>
+            <div class="control-group">
+                <select id="coupling-type">
+                    <option value="gaussian">Gaussian N(0, σ²)</option>
+                    <option value="discrete">Discrete ±1</option>
+                </select>
+            </div>
+            <div class="control-group" id="sigma-group">
+                <label>σ: <span id="sigma-value">1.00</span></label>
+                <input type="range" id="sigma-slider" min="0.01" max="10" step="0.01" value="1">
+            </div>
+            <div class="control-group" id="p-group" style="display:none;">
+                <label>p (+1): <span id="p-value">0.50</span></label>
+                <input type="range" id="p-slider" min="0" max="1" step="0.01" value="0.5">
+            </div>
+            
+            <hr>
+            <h2>Simulation</h2>
+            <div class="control-group">
+                <label>Speed: <span id="speed-value">5</span> steps/frame</label>
+                <input type="range" id="speed-slider" min="1" max="30" value="5">
+            </div>
+            <div class="control-group">
+                <label>Max Steps</label>
+                <select id="max-steps">
+                    <option value="0">Unlimited</option>
+                    <option value="10000" selected>10,000</option>
+                    <option value="25000">25,000</option>
+                    <option value="50000">50,000</option>
+                </select>
+            </div>
+            <div class="control-group seed-row">
+                <div>
+                    <label>φ Seed</label>
+                    <input type="number" id="coupling-seed" value="42">
+                </div>
+                <div>
+                    <label>Init Seed</label>
+                    <input type="number" id="init-seed" value="123">
+                </div>
+            </div>
+            
+            <hr>
+            <h2>Data Recording</h2>
+            <div class="control-group">
+                <label>Record every <span id="record-interval-value">20</span> steps</label>
+                <input type="range" id="record-interval-slider" min="1" max="100" step="1" value="20">
+            </div>
+            <div class="control-group">
+                <label><input type="checkbox" id="full-history-checkbox" checked> Full history (from t=0)</label>
+            </div>
+            <div class="control-group" id="max-history-group" style="display:none;">
+                <label>Window size: <span id="max-history-value">500</span> pts</label>
+                <input type="range" id="max-history-slider" min="100" max="2000" step="100" value="500">
+            </div>
+            <div class="info-box" id="recording-stats">
+                <strong>Estimate:</strong> 10k steps / 20 = <span id="est-points">500</span> pts (~<span id="est-size">25</span>KB)
+            </div>
+            
+            <hr>
+            <h2>Initial Condition</h2>
+            <div class="control-group">
+                <select id="init-type">
+                    <option value="uniform">Uniform</option>
+                    <option value="gaussian" selected>Gaussian</option>
+                </select>
+            </div>
+            <div class="control-group" id="gauss-variance-group">
+                <label>σ: <span id="gauss-variance-value">0.01</span></label>
+                <input type="range" id="gauss-variance-slider" min="0.01" max="1.5" step="0.01" value="0.01">
+            </div>
+            
+            <button class="btn-primary" id="apply-btn">Apply & Reset</button>
+            
+            <hr>
+            <h2>Recording</h2>
+            <button class="btn-danger" id="record-btn">⏺ Start Recording</button>
+            <div class="recording-info" id="recording-info">No recording</div>
+            <button class="btn-primary" id="download-webm-btn" style="display:none;">⬇ Download WebM</button>
+            <button class="btn-secondary" id="clear-rec-btn" style="display:none;">🗑 Clear</button>
+        </div>
+        
+        <div class="main">
+            <canvas id="canvas" width="550" height="500"></canvas>
+            
+            <div class="stats">
+                <div><span>Geom:</span> <span class="value" id="stat-geom">S²</span></div>
+                <div><span>N:</span> <span class="value" id="stat-n">400</span></div>
+                <div><span>T:</span> <span class="value" id="stat-t">0.40</span></div>
+                <div><span>E:</span> <span class="value" id="stat-e">0.0</span></div>
+                <div><span>t:</span> <span class="time" id="stat-time">0.00</span></div>
+                <div><span>Steps:</span> <span class="value" id="stat-steps">0</span></div>
+                <div><span>Data pts:</span> <span class="value" id="stat-datapts">0</span></div>
+                <div><span>Clusters:</span> <span class="value" id="stat-clusters">0</span></div>
+                <div id="rec-indicator" style="display:none;"><span class="rec">● REC</span></div>
+            </div>
+            
+            <div class="play-controls">
+                <button class="btn-success" id="play-btn">▶ Play</button>
+                <button class="btn-danger" id="stop-btn">⏹ Stop</button>
+                <button class="btn-secondary" id="reset-btn">↺ Reset</button>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <h2>Cluster Detection</h2>
+            <div class="cluster-panel">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:#60a5fa; font-size:11px;">Clusters found:</span>
+                    <span id="num-clusters" style="color:#e2e8f0; font-weight:bold;">0</span>
+                </div>
+                <div id="clusters-container"></div>
+            </div>
+            
+            <h2>Angular Momentum</h2>
+            <div class="cluster-panel">
+                <div style="font-size:10px; font-family:monospace; color:#94a3b8;">
+                    <div>L<sub>total</sub>: <span id="L-total" style="color:#e2e8f0;">0.00</span></div>
+                    <div>⟨ω⟩: <span id="mean-omega" style="color:#e2e8f0;">0.000</span> rad/t</div>
+                </div>
+            </div>
+            
+            <h2>Time Series</h2>
+            <canvas id="L-plot" class="plot-canvas" width="260" height="55"></canvas>
+            <canvas id="omega-plot" class="plot-canvas" width="260" height="55"></canvas>
+            
+            <hr>
+            <h2>Data Export</h2>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                <button class="btn-primary" id="export-coords-btn" style="flex:1; min-width:65px;">Coords</button>
+                <button class="btn-secondary" id="export-L-btn" style="flex:1; min-width:65px;">L(t)</button>
+                <button class="btn-secondary" id="export-clusters-btn" style="flex:1; min-width:65px;">Clusters</button>
+            </div>
+            
+            <div id="export-panel" style="display:none; margin-top:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span id="export-title" style="font-size:10px; color:#60a5fa;"></span>
+                    <button id="export-close-btn" style="background:#475569; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; font-size:9px; width:auto;">✕</button>
+                </div>
+                <textarea id="export-data" style="width:100%; height:100px; background:#0f172a; color:#e2e8f0; border:1px solid #334155; border-radius:4px; padding:6px; font-family:monospace; font-size:8px; resize:vertical;" readonly></textarea>
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button id="export-copy-btn" class="btn-primary" style="flex:1; padding:4px; font-size:9px;">📋 Copy</button>
+                    <button id="export-download-btn" class="btn-success" style="flex:1; padding:4px; font-size:9px;">⬇ Download</button>
+                </div>
+            </div>
+            
+            <hr>
+            <h2>View</h2>
+            <div class="control-group">
+                <label>Color Mode</label>
+                <select id="color-mode">
+                    <option value="total" selected>Total Energy</option>
+                    <option value="kinetic">Kinetic (|F|²)</option>
+                    <option value="cluster">By Cluster</option>
+                    <option value="none">None</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:4px;">
+                <button class="btn-secondary" id="top-view-btn" style="flex:1;">Top</button>
+                <button class="btn-secondary" id="side-view-btn" style="flex:1;">Side</button>
+                <button class="btn-secondary" id="reset-view-btn" style="flex:1;">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SIMULATION CLASS ====================
+        function BrownianSimulation(geometry, params) {
+            this.geometry = geometry;
+            this.N = params.N;
+            this.T = params.temperature;
+            this.gamma = 1.0;
+            this.D = this.T / this.gamma;
+            this.dt = 0.005;
+            this.time = 0;
+            
+            if (geometry === 'cylinder') {
+                this.cylR = params.cylRadius || 1.0;
+                this.cylH = params.cylHeight || 3.0;
+                this.zBoundary = params.zBoundary || 'reflective';
+            } else if (geometry === 'torus') {
+                this.torusR = params.torusR || 1.5;
+                this.torusr = params.torusr || 0.5;
+            } else {
+                this.sphereR = 1.0;
+            }
+            
+            var seed1 = params.initSeed || 123;
+            this.rng = function() {
+                seed1 = (seed1 * 1103515245 + 12345) & 0x7fffffff;
+                return seed1 / 0x7fffffff;
+            };
+            
+            var seed2 = params.couplingSeed || 42;
+            this.couplingRng = function() {
+                seed2 = (seed2 * 1103515245 + 12345) & 0x7fffffff;
+                return seed2 / 0x7fffffff;
+            };
+            
+            this.positions = this.initializePositions(params.initType, params.gaussVariance);
+            this.initialPositions = this.copyPositions(this.positions);
+            this.prevPositions = this.copyPositions(this.positions);
+            
+            this.velocities = [];
+            for (var i = 0; i < this.N; i++) {
+                this.velocities.push(this.geometry === 'sphere' ? [0,0,0] : [0,0]);
+            }
+            
+            this.phi = this.generateCouplings(params.couplingType, params.sigma, params.p);
+            
+            // Cluster assignments
+            this.clusterAssignments = new Array(this.N).fill(-1);
+            this.numClusters = 0;
+            this.clusterColors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ec4899'];
+            
+            // Time series recording settings
+            this.recordInterval = params.recordInterval || 20;  // Record every N steps
+            this.fullHistory = params.fullHistory !== false;    // Default: true (record from t=0)
+            this.maxHistory = params.maxHistory || 500;         // Only used if fullHistory=false
+            this.stepCounter = 0;  // For tracking record intervals
+            
+            // Time series data
+            this.timeHistory = [];
+            this.LHistory = [];
+            this.omegaHistory = [];
+            this.clusterLHistory = [[], [], [], [], [], []];
+            this.clusterOmegaHistory = [[], [], [], [], [], []];
+        }
+        
+        BrownianSimulation.prototype.gaussianRandom = function(rng) {
+            var u1 = rng();
+            var u2 = rng();
+            return Math.sqrt(-2 * Math.log(u1 + 1e-10)) * Math.cos(2 * Math.PI * u2);
+        };
+        
+        BrownianSimulation.prototype.copyPositions = function(positions) {
+            return positions.map(function(p) { return p.slice(); });
+        };
+        
+        // ==================== POSITION INITIALIZATION ====================
+        BrownianSimulation.prototype.initializePositions = function(initType, gaussVariance) {
+            if (this.geometry === 'sphere') return this.initSpherePositions(initType, gaussVariance);
+            if (this.geometry === 'cylinder') return this.initCylinderPositions(initType, gaussVariance);
+            return this.initTorusPositions(initType, gaussVariance);
+        };
+        
+        BrownianSimulation.prototype.initSpherePositions = function(initType, gaussVariance) {
+            var positions = [];
+            if (initType === 'gaussian') {
+                var cx = this.gaussianRandom(this.rng);
+                var cy = this.gaussianRandom(this.rng);
+                var cz = this.gaussianRandom(this.rng);
+                var cNorm = Math.sqrt(cx*cx + cy*cy + cz*cz);
+                var center = [cx/cNorm, cy/cNorm, cz/cNorm];
+                
+                var ref = Math.abs(center[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+                var dot = ref[0]*center[0] + ref[1]*center[1] + ref[2]*center[2];
+                var t1 = [ref[0] - dot*center[0], ref[1] - dot*center[1], ref[2] - dot*center[2]];
+                var t1Norm = Math.sqrt(t1[0]*t1[0] + t1[1]*t1[1] + t1[2]*t1[2]);
+                t1 = [t1[0]/t1Norm, t1[1]/t1Norm, t1[2]/t1Norm];
+                var t2 = [center[1]*t1[2] - center[2]*t1[1], center[2]*t1[0] - center[0]*t1[2], center[0]*t1[1] - center[1]*t1[0]];
+                
+                for (var i = 0; i < this.N; i++) {
+                    var u = this.gaussianRandom(this.rng) * gaussVariance;
+                    var v = this.gaussianRandom(this.rng) * gaussVariance;
+                    var px = center[0] + u*t1[0] + v*t2[0];
+                    var py = center[1] + u*t1[1] + v*t2[1];
+                    var pz = center[2] + u*t1[2] + v*t2[2];
+                    var pNorm = Math.sqrt(px*px + py*py + pz*pz);
+                    positions.push([px/pNorm, py/pNorm, pz/pNorm]);
+                }
+            } else {
+                for (var i = 0; i < this.N; i++) {
+                    var x = this.gaussianRandom(this.rng);
+                    var y = this.gaussianRandom(this.rng);
+                    var z = this.gaussianRandom(this.rng);
+                    var norm = Math.sqrt(x*x + y*y + z*z);
+                    positions.push([x/norm, y/norm, z/norm]);
+                }
+            }
+            return positions;
+        };
+        
+        BrownianSimulation.prototype.initCylinderPositions = function(initType, gaussVariance) {
+            var positions = [];
+            var H = this.cylH;
+            if (initType === 'gaussian') {
+                var centerTheta = this.rng() * 2 * Math.PI;
+                var centerZ = (this.rng() - 0.5) * H * 0.5;
+                for (var i = 0; i < this.N; i++) {
+                    var dTheta = this.gaussianRandom(this.rng) * gaussVariance / this.cylR;
+                    var dZ = this.gaussianRandom(this.rng) * gaussVariance;
+                    var theta = ((centerTheta + dTheta) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    var z = this.applyZBoundary(centerZ + dZ);
+                    positions.push([theta, z]);
+                }
+            } else {
+                for (var i = 0; i < this.N; i++) {
+                    positions.push([this.rng() * 2 * Math.PI, (this.rng() - 0.5) * H]);
+                }
+            }
+            return positions;
+        };
+        
+        BrownianSimulation.prototype.initTorusPositions = function(initType, gaussVariance) {
+            var positions = [];
+            if (initType === 'gaussian') {
+                var centerTheta = this.rng() * 2 * Math.PI;
+                var centerPhi = this.rng() * 2 * Math.PI;
+                for (var i = 0; i < this.N; i++) {
+                    var dTheta = this.gaussianRandom(this.rng) * gaussVariance / this.torusR;
+                    var dPhi = this.gaussianRandom(this.rng) * gaussVariance / this.torusr;
+                    var theta = ((centerTheta + dTheta) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    var phi = ((centerPhi + dPhi) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    positions.push([theta, phi]);
+                }
+            } else {
+                for (var i = 0; i < this.N; i++) {
+                    positions.push([this.rng() * 2 * Math.PI, this.rng() * 2 * Math.PI]);
+                }
+            }
+            return positions;
+        };
+        
+        BrownianSimulation.prototype.applyZBoundary = function(z) {
+            var halfH = this.cylH / 2;
+            if (this.zBoundary === 'periodic') {
+                while (z > halfH) z -= this.cylH;
+                while (z < -halfH) z += this.cylH;
+            } else {
+                z = Math.max(-halfH, Math.min(halfH, z));
+            }
+            return z;
+        };
+        
+        // ==================== COUPLINGS ====================
+        BrownianSimulation.prototype.generateCouplings = function(type, sigma, p) {
+            var phi = [];
+            for (var i = 0; i < this.N; i++) phi[i] = new Array(this.N).fill(0);
+            for (var i = 0; i < this.N; i++) {
+                for (var j = i + 1; j < this.N; j++) {
+                    var val = (type === 'gaussian') 
+                        ? this.gaussianRandom(this.couplingRng) * sigma
+                        : (this.couplingRng() < (p || 0.5) ? 1 : -1);
+                    phi[i][j] = val;
+                    phi[j][i] = val;
+                }
+            }
+            return phi;
+        };
+        
+        // ==================== GEODESIC DISTANCE ====================
+        BrownianSimulation.prototype.geodesicDistance = function(pos_i, pos_j) {
+            if (this.geometry === 'sphere') {
+                var dot = pos_i[0]*pos_j[0] + pos_i[1]*pos_j[1] + pos_i[2]*pos_j[2];
+                return Math.acos(Math.max(-1, Math.min(1, dot)));
+            } else if (this.geometry === 'cylinder') {
+                var dTheta = pos_j[0] - pos_i[0];
+                while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                var dz = pos_j[1] - pos_i[1];
+                if (this.zBoundary === 'periodic') {
+                    while (dz > this.cylH/2) dz -= this.cylH;
+                    while (dz < -this.cylH/2) dz += this.cylH;
+                }
+                return Math.sqrt((this.cylR * dTheta) ** 2 + dz * dz);
+            } else {
+                var dTheta = pos_j[0] - pos_i[0];
+                while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                var dPhi = pos_j[1] - pos_i[1];
+                while (dPhi > Math.PI) dPhi -= 2 * Math.PI;
+                while (dPhi < -Math.PI) dPhi += 2 * Math.PI;
+                var phiMid = (pos_i[1] + pos_j[1]) / 2;
+                var Reff = this.torusR + this.torusr * Math.cos(phiMid);
+                return Math.sqrt((Reff * dTheta) ** 2 + (this.torusr * dPhi) ** 2);
+            }
+        };
+        
+        // ==================== ENERGY ====================
+        BrownianSimulation.prototype.totalEnergy = function() {
+            var energy = 0;
+            for (var i = 0; i < this.N; i++) {
+                for (var j = i + 1; j < this.N; j++) {
+                    energy += this.phi[i][j] * this.geodesicDistance(this.positions[i], this.positions[j]);
+                }
+            }
+            return energy;
+        };
+        
+        BrownianSimulation.prototype.particleEnergies = function() {
+            var energies = [];
+            for (var i = 0; i < this.N; i++) {
+                var ei = 0;
+                for (var j = 0; j < this.N; j++) {
+                    if (i !== j) ei += 0.5 * this.phi[i][j] * this.geodesicDistance(this.positions[i], this.positions[j]);
+                }
+                energies.push(ei);
+            }
+            return energies;
+        };
+        
+        BrownianSimulation.prototype.particleKineticEnergies = function() {
+            var forces = this.computeForces();
+            return forces.map(function(f) {
+                var fMag2 = 0;
+                for (var k = 0; k < f.length; k++) fMag2 += f[k] * f[k];
+                return fMag2;
+            });
+        };
+        
+        // ==================== FORCES ====================
+        BrownianSimulation.prototype.computeForces = function() {
+            if (this.geometry === 'sphere') return this.computeSphereForces();
+            if (this.geometry === 'cylinder') return this.computeCylinderForces();
+            return this.computeTorusForces();
+        };
+        
+        BrownianSimulation.prototype.computeSphereForces = function() {
+            var forces = [];
+            for (var i = 0; i < this.N; i++) forces[i] = [0, 0, 0];
+            
+            for (var i = 0; i < this.N; i++) {
+                var xi = this.positions[i];
+                for (var j = 0; j < this.N; j++) {
+                    if (i === j) continue;
+                    var xj = this.positions[j];
+                    var dot = xi[0]*xj[0] + xi[1]*xj[1] + xi[2]*xj[2];
+                    var d = Math.acos(Math.max(-1, Math.min(1, dot)));
+                    if (d < 1e-8) continue;
+                    
+                    var proj = [xj[0] - dot*xi[0], xj[1] - dot*xi[1], xj[2] - dot*xi[2]];
+                    var projNorm = Math.sqrt(proj[0]*proj[0] + proj[1]*proj[1] + proj[2]*proj[2]);
+                    if (projNorm < 1e-8) continue;
+                    
+                    var tangent = [proj[0]/projNorm, proj[1]/projNorm, proj[2]/projNorm];
+                    var phiij = this.phi[i][j];
+                    forces[i][0] += phiij * tangent[0];
+                    forces[i][1] += phiij * tangent[1];
+                    forces[i][2] += phiij * tangent[2];
+                }
+            }
+            return forces;
+        };
+        
+        BrownianSimulation.prototype.computeCylinderForces = function() {
+            var forces = [];
+            for (var i = 0; i < this.N; i++) forces[i] = [0, 0];
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos_i = this.positions[i];
+                for (var j = 0; j < this.N; j++) {
+                    if (i === j) continue;
+                    var pos_j = this.positions[j];
+                    var dTheta = pos_j[0] - pos_i[0];
+                    while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                    while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                    var dz = pos_j[1] - pos_i[1];
+                    if (this.zBoundary === 'periodic') {
+                        while (dz > this.cylH/2) dz -= this.cylH;
+                        while (dz < -this.cylH/2) dz += this.cylH;
+                    }
+                    var d = Math.sqrt((this.cylR * dTheta) ** 2 + dz * dz);
+                    if (d < 1e-8) continue;
+                    var phiij = this.phi[i][j];
+                    forces[i][0] += phiij * this.cylR * dTheta / d;
+                    forces[i][1] += phiij * dz / d;
+                }
+            }
+            return forces;
+        };
+        
+        BrownianSimulation.prototype.computeTorusForces = function() {
+            var forces = [];
+            for (var i = 0; i < this.N; i++) forces[i] = [0, 0];
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos_i = this.positions[i];
+                var phi_i = pos_i[1];
+                var Ri = this.torusR + this.torusr * Math.cos(phi_i);
+                
+                for (var j = 0; j < this.N; j++) {
+                    if (i === j) continue;
+                    var pos_j = this.positions[j];
+                    var dTheta = pos_j[0] - pos_i[0];
+                    while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                    while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                    var dPhi = pos_j[1] - pos_i[1];
+                    while (dPhi > Math.PI) dPhi -= 2 * Math.PI;
+                    while (dPhi < -Math.PI) dPhi += 2 * Math.PI;
+                    
+                    var d = Math.sqrt((Ri * dTheta) ** 2 + (this.torusr * dPhi) ** 2);
+                    if (d < 1e-8) continue;
+                    var phiij = this.phi[i][j];
+                    forces[i][0] += phiij * dTheta / d;
+                    forces[i][1] += phiij * dPhi / d;
+                }
+            }
+            return forces;
+        };
+        
+        // ==================== DYNAMICS ====================
+        BrownianSimulation.prototype.step = function() {
+            for (var i = 0; i < this.N; i++) {
+                for (var k = 0; k < this.positions[i].length; k++) {
+                    this.prevPositions[i][k] = this.positions[i][k];
+                }
+            }
+            
+            if (this.geometry === 'sphere') this.stepSphere();
+            else if (this.geometry === 'cylinder') this.stepCylinder();
+            else this.stepTorus();
+            
+            // Compute velocities
+            for (var i = 0; i < this.N; i++) {
+                for (var k = 0; k < this.positions[i].length; k++) {
+                    var delta = this.positions[i][k] - this.prevPositions[i][k];
+                    if (this.geometry !== 'sphere' && k < 2) {
+                        while (delta > Math.PI) delta -= 2 * Math.PI;
+                        while (delta < -Math.PI) delta += 2 * Math.PI;
+                    }
+                    this.velocities[i][k] = delta / this.dt;
+                }
+            }
+            
+            this.time += this.dt;
+            this.stepCounter++;
+            
+            // Record data at specified interval
+            if (this.stepCounter % this.recordInterval === 0) {
+                this.detectClusters();
+                this.recordData();
+            }
+        };
+        
+        BrownianSimulation.prototype.stepSphere = function() {
+            var forces = this.computeForces();
+            var sqrtTerm = Math.sqrt(2 * this.D * this.dt);
+            
+            for (var i = 0; i < this.N; i++) {
+                var xi = this.positions[i];
+                var f = forces[i];
+                var nx = xi[0] + f[0] / this.gamma * this.dt + sqrtTerm * this.gaussianRandom(this.rng);
+                var ny = xi[1] + f[1] / this.gamma * this.dt + sqrtTerm * this.gaussianRandom(this.rng);
+                var nz = xi[2] + f[2] / this.gamma * this.dt + sqrtTerm * this.gaussianRandom(this.rng);
+                var norm = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                this.positions[i] = [nx/norm, ny/norm, nz/norm];
+            }
+        };
+        
+        BrownianSimulation.prototype.stepCylinder = function() {
+            var forces = this.computeForces();
+            var sqrtTerm = Math.sqrt(2 * this.D * this.dt);
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos = this.positions[i];
+                var newTheta = pos[0] + forces[i][0] / this.gamma * this.dt + sqrtTerm * this.gaussianRandom(this.rng) / this.cylR;
+                var newZ = pos[1] + forces[i][1] / this.gamma * this.dt + sqrtTerm * this.gaussianRandom(this.rng);
+                newTheta = ((newTheta % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+                newZ = this.applyZBoundary(newZ);
+                this.positions[i] = [newTheta, newZ];
+            }
+        };
+        
+        BrownianSimulation.prototype.stepTorus = function() {
+            var forces = this.computeForces();
+            var sqrtTerm = Math.sqrt(2 * this.D * this.dt);
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos = this.positions[i];
+                var phi_i = pos[1];
+                var Ri = this.torusR + this.torusr * Math.cos(phi_i);
+                var noiseInducedDrift = this.D * Math.sin(phi_i) / (Ri * Ri);
+                
+                var newTheta = pos[0] + (forces[i][0] / this.gamma + noiseInducedDrift) * this.dt + sqrtTerm * this.gaussianRandom(this.rng) / Ri;
+                var newPhi = pos[1] + forces[i][1] / this.gamma * this.dt + sqrtTerm * this.gaussianRandom(this.rng) / this.torusr;
+                newTheta = ((newTheta % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+                newPhi = ((newPhi % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+                this.positions[i] = [newTheta, newPhi];
+            }
+        };
+        
+        // ==================== CLUSTER DETECTION ====================
+        BrownianSimulation.prototype.detectClusters = function() {
+            if (this.geometry === 'sphere') this.detectSphereClusters();
+            else if (this.geometry === 'cylinder') this.detectCylinderClusters();
+            else this.detectTorusClusters();
+        };
+        
+        // Sphere: detect 1 band by z-coordinate
+        BrownianSimulation.prototype.detectSphereClusters = function() {
+            var numBins = 20;
+            var histogram = new Array(numBins).fill(0);
+            
+            for (var i = 0; i < this.N; i++) {
+                var z = this.positions[i][2];
+                var bin = Math.floor((z + 1) / 2 * (numBins - 0.01));
+                bin = Math.max(0, Math.min(numBins - 1, bin));
+                histogram[bin]++;
+            }
+            
+            // Smooth
+            var smoothed = [];
+            for (var i = 0; i < numBins; i++) {
+                var prev = Math.max(0, i - 1);
+                var next = Math.min(numBins - 1, i + 1);
+                smoothed[i] = 0.25 * histogram[prev] + 0.5 * histogram[i] + 0.25 * histogram[next];
+            }
+            
+            // Find peak
+            var maxBin = 0, maxVal = 0;
+            for (var i = 0; i < numBins; i++) {
+                if (smoothed[i] > maxVal) {
+                    maxVal = smoothed[i];
+                    maxBin = i;
+                }
+            }
+            
+            var peakZ = (maxBin + 0.5) / numBins * 2 - 1;
+            this.numClusters = 1;
+            this.clusterAssignments.fill(-1);
+            
+            // Assign particles near peak (within 0.5 z-units)
+            for (var i = 0; i < this.N; i++) {
+                var z = this.positions[i][2];
+                if (Math.abs(z - peakZ) < 0.5) {
+                    this.clusterAssignments[i] = 0;
+                }
+            }
+        };
+        
+        // Cylinder: detect 4 clusters by (theta, z) binning
+        BrownianSimulation.prototype.detectCylinderClusters = function() {
+            var numBinsTheta = 12;
+            var numBinsZ = 8;
+            var histogram = [];
+            for (var i = 0; i < numBinsTheta; i++) {
+                histogram[i] = new Array(numBinsZ).fill(0);
+            }
+            
+            for (var i = 0; i < this.N; i++) {
+                var theta = this.positions[i][0];
+                var z = this.positions[i][1];
+                var binTheta = Math.floor(theta / (2 * Math.PI) * numBinsTheta) % numBinsTheta;
+                var binZ = Math.floor((z + this.cylH/2) / this.cylH * numBinsZ);
+                binZ = Math.max(0, Math.min(numBinsZ - 1, binZ));
+                histogram[binTheta][binZ]++;
+            }
+            
+            // Find top 4 peaks
+            var peaks = [];
+            for (var i = 0; i < numBinsTheta; i++) {
+                for (var j = 0; j < numBinsZ; j++) {
+                    peaks.push({
+                        theta: (i + 0.5) / numBinsTheta * 2 * Math.PI,
+                        z: (j + 0.5) / numBinsZ * this.cylH - this.cylH/2,
+                        count: histogram[i][j]
+                    });
+                }
+            }
+            peaks.sort(function(a, b) { return b.count - a.count; });
+            
+            // Select up to 4 peaks that are sufficiently separated
+            var selectedPeaks = [];
+            var minSep = 0.7;
+            for (var i = 0; i < peaks.length && selectedPeaks.length < 4; i++) {
+                var p = peaks[i];
+                if (p.count < this.N * 0.02) continue;
+                
+                var tooClose = false;
+                for (var j = 0; j < selectedPeaks.length; j++) {
+                    var sp = selectedPeaks[j];
+                    var dTheta = Math.abs(p.theta - sp.theta);
+                    if (dTheta > Math.PI) dTheta = 2 * Math.PI - dTheta;
+                    var dist = Math.sqrt((this.cylR * dTheta) ** 2 + (p.z - sp.z) ** 2);
+                    if (dist < minSep) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                if (!tooClose) selectedPeaks.push(p);
+            }
+            
+            this.numClusters = selectedPeaks.length;
+            this.clusterAssignments.fill(-1);
+            
+            // Assign particles to nearest peak
+            for (var i = 0; i < this.N; i++) {
+                var theta = this.positions[i][0];
+                var z = this.positions[i][1];
+                var bestCluster = -1;
+                var bestDist = Infinity;
+                
+                for (var c = 0; c < this.numClusters; c++) {
+                    var dTheta = Math.abs(theta - selectedPeaks[c].theta);
+                    if (dTheta > Math.PI) dTheta = 2 * Math.PI - dTheta;
+                    var dist = Math.sqrt((this.cylR * dTheta) ** 2 + (z - selectedPeaks[c].z) ** 2);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestCluster = c;
+                    }
+                }
+                
+                if (bestDist < 0.8) this.clusterAssignments[i] = bestCluster;
+            }
+        };
+        
+        // Torus: detect 2 rings by phi coordinate
+        BrownianSimulation.prototype.detectTorusClusters = function() {
+            var numBins = 36;
+            var binWidth = 2 * Math.PI / numBins;
+            var histogram = new Array(numBins).fill(0);
+            
+            for (var i = 0; i < this.N; i++) {
+                var phi = this.positions[i][1];
+                var bin = Math.floor(phi / binWidth) % numBins;
+                histogram[bin]++;
+            }
+            
+            // Smooth
+            var smoothed = [];
+            for (var i = 0; i < numBins; i++) {
+                var prev = (i - 1 + numBins) % numBins;
+                var next = (i + 1) % numBins;
+                smoothed[i] = 0.25 * histogram[prev] + 0.5 * histogram[i] + 0.25 * histogram[next];
+            }
+            
+            // Find peaks
+            var minCount = Math.max(3, this.N * 0.05);
+            var peaks = [];
+            for (var i = 0; i < numBins; i++) {
+                var prev = (i - 1 + numBins) % numBins;
+                var next = (i + 1) % numBins;
+                if (smoothed[i] > smoothed[prev] && smoothed[i] > smoothed[next] && smoothed[i] >= minCount) {
+                    peaks.push({ bin: i, phi: (i + 0.5) * binWidth, count: smoothed[i] });
+                }
+            }
+            
+            peaks.sort(function(a, b) { return b.count - a.count; });
+            peaks = peaks.slice(0, 4);
+            peaks.sort(function(a, b) { return a.phi - b.phi; });
+            
+            this.numClusters = peaks.length;
+            this.clusterAssignments.fill(-1);
+            
+            if (this.numClusters === 0) return;
+            
+            for (var i = 0; i < this.N; i++) {
+                var phi = this.positions[i][1];
+                var bestCluster = -1;
+                var bestDist = Infinity;
+                
+                for (var c = 0; c < this.numClusters; c++) {
+                    var dist = Math.abs(phi - peaks[c].phi);
+                    if (dist > Math.PI) dist = 2 * Math.PI - dist;
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestCluster = c;
+                    }
+                }
+                
+                var maxDist = Math.PI / 4;
+                if (this.numClusters >= 2) {
+                    var minPeakDist = Infinity;
+                    for (var c1 = 0; c1 < this.numClusters; c1++) {
+                        for (var c2 = c1 + 1; c2 < this.numClusters; c2++) {
+                            var d = Math.abs(peaks[c1].phi - peaks[c2].phi);
+                            if (d > Math.PI) d = 2 * Math.PI - d;
+                            minPeakDist = Math.min(minPeakDist, d);
+                        }
+                    }
+                    maxDist = minPeakDist / 2;
+                }
+                
+                if (bestDist <= maxDist) this.clusterAssignments[i] = bestCluster;
+            }
+        };
+        
+        // ==================== ANGULAR MOMENTUM ====================
+        BrownianSimulation.prototype.computeAngularMomentum = function() {
+            var L = 0, sumOmega = 0;
+            
+            if (this.geometry === 'sphere') {
+                // L_z = sum(x*vy - y*vx)
+                for (var i = 0; i < this.N; i++) {
+                    var x = this.positions[i][0], y = this.positions[i][1];
+                    var vx = this.velocities[i][0], vy = this.velocities[i][1];
+                    L += x * vy - y * vx;
+                }
+                sumOmega = L / this.N;
+            } else if (this.geometry === 'cylinder') {
+                // L = R^2 * sum(theta_dot)
+                for (var i = 0; i < this.N; i++) {
+                    L += this.cylR * this.cylR * this.velocities[i][0];
+                    sumOmega += this.velocities[i][0];
+                }
+                sumOmega /= this.N;
+            } else {
+                // Torus: L_theta
+                for (var i = 0; i < this.N; i++) {
+                    var phi_i = this.positions[i][1];
+                    var Ri = this.torusR + this.torusr * Math.cos(phi_i);
+                    L += Ri * Ri * this.velocities[i][0];
+                    sumOmega += this.velocities[i][0];
+                }
+                sumOmega /= this.N;
+            }
+            
+            return { L: L, omega: sumOmega };
+        };
+        
+        BrownianSimulation.prototype.computeClusterMomentum = function(clusterIdx) {
+            var L = 0, sumOmega = 0, count = 0;
+            
+            for (var i = 0; i < this.N; i++) {
+                if (this.clusterAssignments[i] !== clusterIdx) continue;
+                count++;
+                
+                if (this.geometry === 'sphere') {
+                    var x = this.positions[i][0], y = this.positions[i][1];
+                    var vx = this.velocities[i][0], vy = this.velocities[i][1];
+                    L += x * vy - y * vx;
+                    sumOmega += x * vy - y * vx;
+                } else if (this.geometry === 'cylinder') {
+                    L += this.cylR * this.cylR * this.velocities[i][0];
+                    sumOmega += this.velocities[i][0];
+                } else {
+                    var phi_i = this.positions[i][1];
+                    var Ri = this.torusR + this.torusr * Math.cos(phi_i);
+                    L += Ri * Ri * this.velocities[i][0];
+                    sumOmega += this.velocities[i][0];
+                }
+            }
+            
+            return { L: L, omega: count > 0 ? sumOmega / count : 0, count: count };
+        };
+        
+        BrownianSimulation.prototype.recordData = function() {
+            var total = this.computeAngularMomentum();
+            
+            this.timeHistory.push(this.time);
+            this.LHistory.push(total.L);
+            this.omegaHistory.push(total.omega);
+            
+            for (var c = 0; c < 6; c++) {
+                var cm = this.computeClusterMomentum(c);
+                this.clusterLHistory[c].push(cm.L);
+                this.clusterOmegaHistory[c].push(cm.omega);
+            }
+            
+            // Only limit history if fullHistory mode is disabled
+            if (!this.fullHistory && this.timeHistory.length > this.maxHistory) {
+                this.timeHistory.shift();
+                this.LHistory.shift();
+                this.omegaHistory.shift();
+                for (var c = 0; c < 6; c++) {
+                    this.clusterLHistory[c].shift();
+                    this.clusterOmegaHistory[c].shift();
+                }
+            }
+        };
+        
+        // ==================== 3D COORDINATES ====================
+        BrownianSimulation.prototype.to3D = function(index) {
+            if (this.geometry === 'sphere') {
+                return this.positions[index].slice();
+            } else if (this.geometry === 'cylinder') {
+                var theta = this.positions[index][0];
+                var z = this.positions[index][1];
+                return [this.cylR * Math.cos(theta), this.cylR * Math.sin(theta), z];
+            } else {
+                var theta = this.positions[index][0];
+                var phi = this.positions[index][1];
+                var rF = this.torusR + this.torusr * Math.cos(phi);
+                return [rF * Math.cos(theta), rF * Math.sin(theta), this.torusr * Math.sin(phi)];
+            }
+        };
+        
+        BrownianSimulation.prototype.reset = function() {
+            this.positions = this.copyPositions(this.initialPositions);
+            this.prevPositions = this.copyPositions(this.initialPositions);
+            for (var i = 0; i < this.N; i++) {
+                for (var k = 0; k < this.velocities[i].length; k++) this.velocities[i][k] = 0;
+            }
+            this.time = 0;
+            this.stepCounter = 0;  // Reset step counter for recording
+            this.clusterAssignments.fill(-1);
+            this.numClusters = 0;
+            this.timeHistory = [];
+            this.LHistory = [];
+            this.omegaHistory = [];
+            for (var c = 0; c < 6; c++) {
+                this.clusterLHistory[c] = [];
+                this.clusterOmegaHistory[c] = [];
+            }
+        };
+        
+        // ==================== RENDERING ====================
+        function energyToColor(value, minVal, maxVal) {
+            var t = (maxVal > minVal) ? (value - minVal) / (maxVal - minVal) : 0.5;
+            t = Math.max(0, Math.min(1, t));
+            var r, g, b;
+            if (t < 0.25) { r = 30; g = Math.round(80 + 175 * t / 0.25); b = 255; }
+            else if (t < 0.5) { r = Math.round(30 + 70 * (t - 0.25) / 0.25); g = 255; b = Math.round(255 - 155 * (t - 0.25) / 0.25); }
+            else if (t < 0.75) { r = Math.round(100 + 155 * (t - 0.5) / 0.25); g = 255; b = Math.round(100 - 100 * (t - 0.5) / 0.25); }
+            else { r = 255; g = Math.round(255 - 200 * (t - 0.75) / 0.25); b = 0; }
+            return { r: r, g: g, b: b };
+        }
+        
+        function project3D(point, rotY, rotX, scale, cx, cy, geomType) {
+            var x = point[0], y = point[1], z = point[2];
+            var cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+            var x1, y1, z1;
+            
+            if (geomType === 'cylinder' || geomType === 'torus') {
+                x1 = x * cosY + y * sinY;
+                y1 = -x * sinY + y * cosY;
+                z1 = z;
+            } else {
+                x1 = x * cosY + z * sinY;
+                z1 = -x * sinY + z * cosY;
+                y1 = y;
+            }
+            
+            var cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+            var y2 = y1 * cosX - z1 * sinX;
+            var z2 = y1 * sinX + z1 * cosX;
+            
+            var pd = (geomType === 'cylinder' || geomType === 'torus') ? 5 : 3;
+            var persp = pd / (pd - x1);
+            
+            return {
+                x: cx + ((geomType === 'cylinder' || geomType === 'torus') ? y2 : x1) * scale * persp,
+                y: cy - ((geomType === 'cylinder' || geomType === 'torus') ? z2 : y2) * scale * persp,
+                z: x1,
+                scale: persp
+            };
+        }
+        
+        // ==================== APP STATE ====================
+        var sim = null;
+        var isRunning = false;
+        var rotation = { y: 0.5, x: 0.3 };
+        var stepCount = 0;
+        var animationId = null;
+        var stepsPerFrame = 5;
+        var maxSteps = 25000;
+        var colorMode = 'total';
+        var currentGeometry = 'sphere';
+        
+        var isRecording = false;
+        var recordedChunks = [];
+        var mediaRecorder = null;
+        
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var Lplot = document.getElementById('L-plot');
+        var LplotCtx = Lplot.getContext('2d');
+        var omegaPlot = document.getElementById('omega-plot');
+        var omegaPlotCtx = omegaPlot.getContext('2d');
+        
+        // ==================== INITIALIZATION ====================
+        function initSimulation() {
+            currentGeometry = document.getElementById('geometry-type').value;
+            
+            var params = {
+                N: parseInt(document.getElementById('n-slider').value),
+                temperature: parseFloat(document.getElementById('t-slider').value),
+                couplingType: document.getElementById('coupling-type').value,
+                sigma: parseFloat(document.getElementById('sigma-slider').value),
+                p: parseFloat(document.getElementById('p-slider')?.value || 0.5),
+                couplingSeed: parseInt(document.getElementById('coupling-seed').value) || 42,
+                initSeed: parseInt(document.getElementById('init-seed').value) || 123,
+                initType: document.getElementById('init-type').value,
+                gaussVariance: parseFloat(document.getElementById('gauss-variance-slider').value),
+                cylRadius: parseFloat(document.getElementById('cyl-r-slider').value),
+                cylHeight: parseFloat(document.getElementById('cyl-h-slider').value),
+                zBoundary: document.getElementById('z-boundary')?.value || 'reflective',
+                torusR: parseFloat(document.getElementById('torus-R-slider').value),
+                torusr: parseFloat(document.getElementById('torus-r-slider').value),
+                // Recording parameters
+                recordInterval: parseInt(document.getElementById('record-interval-slider').value) || 20,
+                fullHistory: document.getElementById('full-history-checkbox').checked,
+                maxHistory: parseInt(document.getElementById('max-history-slider').value) || 500
+            };
+            
+            maxSteps = parseInt(document.getElementById('max-steps').value);
+            sim = new BrownianSimulation(currentGeometry, params);
+            stepCount = 0;
+            isRunning = false;
+            
+            // Record initial state at t=0
+            sim.detectClusters();
+            sim.recordData();
+            
+            updateUI();
+            updateStats();
+            updateClusterDisplay();
+            render();
+            renderPlots();
+        }
+        
+        function render() {
+            var w = canvas.width, h = canvas.height;
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, w, h);
+            
+            if (!sim) return;
+            
+            var cx = w / 2, cy = h / 2;
+            var geomType = sim.geometry;
+            var scale = geomType === 'sphere' ? Math.min(w, h) * 0.38 : Math.min(w, h) * 0.13;
+            
+            // Draw wireframe
+            ctx.strokeStyle = 'rgba(100, 150, 200, 0.15)';
+            ctx.lineWidth = 0.5;
+            
+            if (geomType === 'sphere') {
+                renderSphereWireframe(cx, cy, scale);
+            } else if (geomType === 'cylinder') {
+                renderCylinderWireframe(cx, cy, scale);
+            } else {
+                renderTorusWireframe(cx, cy, scale);
+            }
+            
+            // Compute energies
+            var energies = null, minE = 0, maxE = 1;
+            if (colorMode === 'kinetic') {
+                energies = sim.particleKineticEnergies();
+            } else if (colorMode === 'total') {
+                var ke = sim.particleKineticEnergies();
+                var pe = sim.particleEnergies();
+                energies = ke.map(function(k, i) { return k + pe[i]; });
+            }
+            if (energies) {
+                minE = Math.min.apply(null, energies);
+                maxE = Math.max.apply(null, energies);
+            }
+            
+            // Draw particles
+            var projected = [];
+            for (var i = 0; i < sim.N; i++) {
+                projected.push({ idx: i, proj: project3D(sim.to3D(i), rotation.y, rotation.x, scale, cx, cy, geomType) });
+            }
+            projected.sort(function(a, b) { return a.proj.z - b.proj.z; });
+            
+            for (var k = 0; k < projected.length; k++) {
+                var i = projected[k].idx;
+                var proj = projected[k].proj;
+                var size = (geomType === 'sphere' ? 5 : 4) * proj.scale;
+                var alpha = 0.5 + 0.5 * (proj.z + 3) / 6;
+                
+                var r, g, b;
+                if (colorMode === 'cluster' && sim.clusterAssignments[i] >= 0) {
+                    var hex = sim.clusterColors[sim.clusterAssignments[i]].slice(1);
+                    r = parseInt(hex.substr(0,2), 16);
+                    g = parseInt(hex.substr(2,2), 16);
+                    b = parseInt(hex.substr(4,2), 16);
+                } else if (colorMode !== 'none' && energies) {
+                    var c = energyToColor(energies[i], minE, maxE);
+                    r = c.r; g = c.g; b = c.b;
+                } else {
+                    r = 100; g = 150; b = 255;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, Math.max(2, size), 0, 2 * Math.PI);
+                ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+                ctx.fill();
+            }
+            
+            // Geometry label
+            ctx.fillStyle = '#64748b';
+            ctx.font = '10px monospace';
+            var geomLabel = geomType === 'sphere' ? 'S² (1 band)' : (geomType === 'cylinder' ? 'Cylinder (4 clusters)' : 'T² (2 rings)');
+            ctx.fillText(geomLabel, 8, 16);
+        }
+        
+        function renderSphereWireframe(cx, cy, scale) {
+            for (var lat = -60; lat <= 60; lat += 30) {
+                ctx.beginPath();
+                var r = Math.cos(lat * Math.PI / 180);
+                var zLat = Math.sin(lat * Math.PI / 180);
+                for (var lon = 0; lon <= 360; lon += 10) {
+                    var pt = [r * Math.cos(lon * Math.PI / 180), r * Math.sin(lon * Math.PI / 180), zLat];
+                    var proj = project3D(pt, rotation.y, rotation.x, scale, cx, cy, 'sphere');
+                    lon === 0 ? ctx.moveTo(proj.x, proj.y) : ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+            for (var lon = 0; lon < 180; lon += 30) {
+                ctx.beginPath();
+                for (var lat = -90; lat <= 90; lat += 10) {
+                    var r = Math.cos(lat * Math.PI / 180);
+                    var zLat = Math.sin(lat * Math.PI / 180);
+                    var pt = [r * Math.cos(lon * Math.PI / 180), r * Math.sin(lon * Math.PI / 180), zLat];
+                    var proj = project3D(pt, rotation.y, rotation.x, scale, cx, cy, 'sphere');
+                    lat === -90 ? ctx.moveTo(proj.x, proj.y) : ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+        }
+        
+        function renderCylinderWireframe(cx, cy, scale) {
+            for (var z = -sim.cylH/2; z <= sim.cylH/2; z += sim.cylH/4) {
+                ctx.beginPath();
+                for (var t = 0; t <= 2 * Math.PI; t += 0.1) {
+                    var pt = [sim.cylR * Math.cos(t), sim.cylR * Math.sin(t), z];
+                    var proj = project3D(pt, rotation.y, rotation.x, scale, cx, cy, 'cylinder');
+                    t === 0 ? ctx.moveTo(proj.x, proj.y) : ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+            for (var t = 0; t < 2 * Math.PI; t += Math.PI / 4) {
+                ctx.beginPath();
+                for (var z = -sim.cylH/2; z <= sim.cylH/2; z += 0.1) {
+                    var pt = [sim.cylR * Math.cos(t), sim.cylR * Math.sin(t), z];
+                    var proj = project3D(pt, rotation.y, rotation.x, scale, cx, cy, 'cylinder');
+                    z === -sim.cylH/2 ? ctx.moveTo(proj.x, proj.y) : ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+        }
+        
+        function renderTorusWireframe(cx, cy, scale) {
+            for (var phi = 0; phi < 2 * Math.PI; phi += Math.PI / 4) {
+                ctx.beginPath();
+                for (var t = 0; t <= 2 * Math.PI; t += 0.1) {
+                    var rF = sim.torusR + sim.torusr * Math.cos(phi);
+                    var pt = [rF * Math.cos(t), rF * Math.sin(t), sim.torusr * Math.sin(phi)];
+                    var proj = project3D(pt, rotation.y, rotation.x, scale, cx, cy, 'torus');
+                    t === 0 ? ctx.moveTo(proj.x, proj.y) : ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+            for (var theta = 0; theta < 2 * Math.PI; theta += Math.PI / 4) {
+                ctx.beginPath();
+                for (var phi = 0; phi <= 2 * Math.PI; phi += 0.1) {
+                    var rF = sim.torusR + sim.torusr * Math.cos(phi);
+                    var pt = [rF * Math.cos(theta), rF * Math.sin(theta), sim.torusr * Math.sin(phi)];
+                    var proj = project3D(pt, rotation.y, rotation.x, scale, cx, cy, 'torus');
+                    phi === 0 ? ctx.moveTo(proj.x, proj.y) : ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+        
+        function renderPlots() {
+            if (!sim) return;
+            
+            // L plot
+            LplotCtx.fillStyle = '#0f172a';
+            LplotCtx.fillRect(0, 0, Lplot.width, Lplot.height);
+            
+            if (sim.LHistory.length > 1) {
+                var minL = Math.min.apply(null, sim.LHistory);
+                var maxL = Math.max.apply(null, sim.LHistory);
+                var range = maxL - minL || 1;
+                
+                LplotCtx.strokeStyle = '#3b82f6';
+                LplotCtx.lineWidth = 1;
+                LplotCtx.beginPath();
+                for (var i = 0; i < sim.LHistory.length; i++) {
+                    var x = (i / (sim.LHistory.length - 1)) * Lplot.width;
+                    var y = Lplot.height - ((sim.LHistory[i] - minL) / range) * (Lplot.height - 8) - 4;
+                    i === 0 ? LplotCtx.moveTo(x, y) : LplotCtx.lineTo(x, y);
+                }
+                LplotCtx.stroke();
+                
+                for (var c = 0; c < sim.numClusters; c++) {
+                    LplotCtx.strokeStyle = sim.clusterColors[c];
+                    LplotCtx.beginPath();
+                    for (var i = 0; i < sim.clusterLHistory[c].length; i++) {
+                        var x = (i / (sim.clusterLHistory[c].length - 1)) * Lplot.width;
+                        var y = Lplot.height - ((sim.clusterLHistory[c][i] - minL) / range) * (Lplot.height - 8) - 4;
+                        i === 0 ? LplotCtx.moveTo(x, y) : LplotCtx.lineTo(x, y);
+                    }
+                    LplotCtx.stroke();
+                }
+            }
+            
+            LplotCtx.fillStyle = '#64748b';
+            LplotCtx.font = '8px monospace';
+            LplotCtx.fillText('L(t)', 4, 10);
+            
+            // Omega plot
+            omegaPlotCtx.fillStyle = '#0f172a';
+            omegaPlotCtx.fillRect(0, 0, omegaPlot.width, omegaPlot.height);
+            
+            if (sim.omegaHistory.length > 1) {
+                var allOmega = sim.omegaHistory.slice();
+                for (var c = 0; c < sim.numClusters; c++) {
+                    allOmega = allOmega.concat(sim.clusterOmegaHistory[c]);
+                }
+                var minO = Math.min.apply(null, allOmega);
+                var maxO = Math.max.apply(null, allOmega);
+                var range = maxO - minO || 1;
+                
+                for (var c = 0; c < sim.numClusters; c++) {
+                    omegaPlotCtx.strokeStyle = sim.clusterColors[c];
+                    omegaPlotCtx.beginPath();
+                    for (var i = 0; i < sim.clusterOmegaHistory[c].length; i++) {
+                        var x = (i / (sim.clusterOmegaHistory[c].length - 1)) * omegaPlot.width;
+                        var y = omegaPlot.height - ((sim.clusterOmegaHistory[c][i] - minO) / range) * (omegaPlot.height - 8) - 4;
+                        i === 0 ? omegaPlotCtx.moveTo(x, y) : omegaPlotCtx.lineTo(x, y);
+                    }
+                    omegaPlotCtx.stroke();
+                }
+            }
+            
+            omegaPlotCtx.fillStyle = '#64748b';
+            omegaPlotCtx.font = '8px monospace';
+            omegaPlotCtx.fillText('ω(t) per cluster', 4, 10);
+        }
+        
+        function updateClusterDisplay() {
+            if (!sim) return;
+            
+            document.getElementById('num-clusters').textContent = sim.numClusters;
+            document.getElementById('stat-clusters').textContent = sim.numClusters;
+            
+            var total = sim.computeAngularMomentum();
+            document.getElementById('L-total').textContent = total.L.toFixed(1);
+            document.getElementById('mean-omega').textContent = total.omega.toFixed(4);
+            
+            var container = document.getElementById('clusters-container');
+            var html = '';
+            for (var c = 0; c < sim.numClusters; c++) {
+                var cm = sim.computeClusterMomentum(c);
+                html += '<div class="cluster-item" style="border-color:' + sim.clusterColors[c] + ';">';
+                html += '<span style="color:' + sim.clusterColors[c] + '; font-weight:bold;">C' + c + '</span> (n=' + cm.count + ') ';
+                html += 'L=' + cm.L.toFixed(0) + ', ω=' + cm.omega.toFixed(3);
+                html += '</div>';
+            }
+            container.innerHTML = html || '<div style="font-size:10px; color:#64748b;">No clusters detected yet</div>';
+        }
+        
+        function updateStats() {
+            if (!sim) return;
+            document.getElementById('stat-geom').textContent = currentGeometry === 'sphere' ? 'S²' : (currentGeometry === 'cylinder' ? 'Cyl' : 'T²');
+            document.getElementById('stat-n').textContent = sim.N;
+            document.getElementById('stat-t').textContent = sim.T.toFixed(2);
+            var energy = sim.totalEnergy();
+            var eEl = document.getElementById('stat-e');
+            eEl.textContent = energy.toFixed(0);
+            eEl.className = 'value ' + (energy < 0 ? 'energy-neg' : 'energy-pos');
+            document.getElementById('stat-time').textContent = (stepCount * 0.005).toFixed(2);
+            document.getElementById('stat-steps').textContent = stepCount + (maxSteps > 0 ? '/' + maxSteps : '');
+            document.getElementById('stat-datapts').textContent = sim.timeHistory.length;
+            document.getElementById('rec-indicator').style.display = isRecording ? 'block' : 'none';
+        }
+        
+        function updateUI() {
+            document.getElementById('play-btn').textContent = isRunning ? '⏸ Pause' : '▶ Play';
+            document.getElementById('play-btn').className = isRunning ? 'btn-warning' : 'btn-success';
+            document.getElementById('record-btn').textContent = isRecording ? '⏹ Stop Rec' : '⏺ Start Rec';
+            document.getElementById('download-webm-btn').style.display = recordedChunks.length > 0 ? 'block' : 'none';
+            document.getElementById('clear-rec-btn').style.display = recordedChunks.length > 0 ? 'block' : 'none';
+            
+            document.getElementById('cylinder-params').style.display = currentGeometry === 'cylinder' ? 'block' : 'none';
+            document.getElementById('torus-params').style.display = currentGeometry === 'torus' ? 'block' : 'none';
+        }
+        
+        function animate() {
+            if (!isRunning || !sim) return;
+            
+            for (var i = 0; i < stepsPerFrame; i++) sim.step();
+            stepCount += stepsPerFrame;
+            
+            if (maxSteps > 0 && stepCount >= maxSteps) {
+                isRunning = false;
+                if (isRecording) stopRecording();
+                updateUI();
+            }
+            
+            updateStats();
+            updateClusterDisplay();
+            render();
+            renderPlots();
+            
+            if (isRunning) animationId = requestAnimationFrame(animate);
+        }
+        
+        // ==================== RECORDING ====================
+        function startRecording() {
+            recordedChunks = [];
+            try {
+                var stream = canvas.captureStream(30);
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+                mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = function() { 
+                    updateUI(); 
+                    document.getElementById('recording-info').textContent = recordedChunks.length + ' chunks recorded';
+                };
+                mediaRecorder.start(100);
+            } catch (err) {
+                console.error('Recording error:', err);
+                mediaRecorder = null;
+            }
+            isRecording = true;
+            document.getElementById('recording-info').textContent = 'Recording...';
+            updateUI();
+        }
+        
+        function stopRecording() {
+            isRecording = false;
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+            setTimeout(updateUI, 200);
+        }
+        
+        function downloadWebM() {
+            if (recordedChunks.length === 0) return;
+            var blob = new Blob(recordedChunks, { type: 'video/webm' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'simulation_' + currentGeometry + '_' + Date.now() + '.webm';
+            a.click();
+        }
+        
+        // ==================== EXPORT ====================
+        var currentExportTitle = '';
+        
+        function showExportData(title, data) {
+            currentExportTitle = title;
+            document.getElementById('export-panel').style.display = 'block';
+            document.getElementById('export-title').textContent = title;
+            document.getElementById('export-data').value = data;
+        }
+        
+        function exportCoords() {
+            if (!sim) return;
+            var csv = 'particle,';
+            if (currentGeometry === 'sphere') {
+                csv += 'x,y,z,vx,vy,vz,cluster\n';
+                for (var i = 0; i < sim.N; i++) {
+                    csv += i + ',' + sim.positions[i].map(function(v) { return v.toFixed(6); }).join(',') + ',' +
+                           sim.velocities[i].map(function(v) { return v.toFixed(6); }).join(',') + ',' + sim.clusterAssignments[i] + '\n';
+                }
+            } else if (currentGeometry === 'cylinder') {
+                csv += 'theta_rad,z,theta_dot,z_dot,cluster\n';
+                for (var i = 0; i < sim.N; i++) {
+                    csv += i + ',' + sim.positions[i][0].toFixed(6) + ',' + sim.positions[i][1].toFixed(6) + ',' +
+                           sim.velocities[i][0].toFixed(6) + ',' + sim.velocities[i][1].toFixed(6) + ',' + sim.clusterAssignments[i] + '\n';
+                }
+            } else {
+                csv += 'theta_rad,phi_rad,theta_dot,phi_dot,cluster\n';
+                for (var i = 0; i < sim.N; i++) {
+                    csv += i + ',' + sim.positions[i][0].toFixed(6) + ',' + sim.positions[i][1].toFixed(6) + ',' +
+                           sim.velocities[i][0].toFixed(6) + ',' + sim.velocities[i][1].toFixed(6) + ',' + sim.clusterAssignments[i] + '\n';
+                }
+            }
+            showExportData('Coords_' + currentGeometry + '_t' + (stepCount*0.005).toFixed(2), csv);
+        }
+        
+        function exportLSeries() {
+            if (!sim || sim.timeHistory.length === 0) { alert('No data yet - run simulation first'); return; }
+            var csv = 'time,L_total,omega_total';
+            for (var c = 0; c < 6; c++) csv += ',L_cluster' + c + ',omega_cluster' + c;
+            csv += '\n';
+            
+            for (var i = 0; i < sim.timeHistory.length; i++) {
+                csv += sim.timeHistory[i].toFixed(4) + ',' + sim.LHistory[i].toFixed(6) + ',' + sim.omegaHistory[i].toFixed(6);
+                for (var c = 0; c < 6; c++) {
+                    csv += ',' + (sim.clusterLHistory[c][i] || 0).toFixed(6) + ',' + (sim.clusterOmegaHistory[c][i] || 0).toFixed(6);
+                }
+                csv += '\n';
+            }
+            showExportData('L_series_' + currentGeometry, csv);
+        }
+        
+        function exportClusters() {
+            if (!sim || sim.numClusters === 0) { alert('No clusters detected'); return; }
+            var csv = 'cluster,particle,';
+            if (currentGeometry === 'sphere') {
+                csv += 'x,y,z,vx,vy,vz\n';
+            } else if (currentGeometry === 'cylinder') {
+                csv += 'theta_rad,z,theta_dot,z_dot\n';
+            } else {
+                csv += 'theta_rad,phi_rad,theta_dot,phi_dot\n';
+            }
+            
+            for (var c = 0; c < sim.numClusters; c++) {
+                for (var i = 0; i < sim.N; i++) {
+                    if (sim.clusterAssignments[i] === c) {
+                        csv += c + ',' + i + ',';
+                        if (currentGeometry === 'sphere') {
+                            csv += sim.positions[i].map(function(v) { return v.toFixed(6); }).join(',') + ',' +
+                                   sim.velocities[i].map(function(v) { return v.toFixed(6); }).join(',') + '\n';
+                        } else {
+                            csv += sim.positions[i][0].toFixed(6) + ',' + sim.positions[i][1].toFixed(6) + ',' +
+                                   sim.velocities[i][0].toFixed(6) + ',' + sim.velocities[i][1].toFixed(6) + '\n';
+                        }
+                    }
+                }
+            }
+            showExportData('Clusters_' + currentGeometry + '_t' + (stepCount*0.005).toFixed(2), csv);
+        }
+        
+        function copyExportData() {
+            var textarea = document.getElementById('export-data');
+            textarea.select();
+            document.execCommand('copy');
+            document.getElementById('export-copy-btn').textContent = '✓ Copied!';
+            setTimeout(function() { document.getElementById('export-copy-btn').textContent = '📋 Copy'; }, 1500);
+        }
+        
+        function downloadExportData() {
+            var data = document.getElementById('export-data').value;
+            var blob = new Blob([data], { type: 'text/csv' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = currentExportTitle.replace(/[^a-z0-9]/gi, '_') + '.csv';
+            a.click();
+        }
+        
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('geometry-type').addEventListener('change', function(e) {
+            currentGeometry = e.target.value;
+            updateUI();
+        });
+        document.getElementById('n-slider').addEventListener('input', function(e) { document.getElementById('n-value').textContent = e.target.value; });
+        document.getElementById('t-slider').addEventListener('input', function(e) { document.getElementById('t-value').textContent = parseFloat(e.target.value).toFixed(2); });
+        document.getElementById('sigma-slider').addEventListener('input', function(e) { document.getElementById('sigma-value').textContent = parseFloat(e.target.value).toFixed(2); });
+        document.getElementById('speed-slider').addEventListener('input', function(e) { stepsPerFrame = parseInt(e.target.value); document.getElementById('speed-value').textContent = e.target.value; });
+        document.getElementById('gauss-variance-slider').addEventListener('input', function(e) { document.getElementById('gauss-variance-value').textContent = parseFloat(e.target.value).toFixed(2); });
+        document.getElementById('cyl-r-slider').addEventListener('input', function(e) { document.getElementById('cyl-r-value').textContent = parseFloat(e.target.value).toFixed(2); });
+        document.getElementById('cyl-h-slider').addEventListener('input', function(e) { document.getElementById('cyl-h-value').textContent = parseFloat(e.target.value).toFixed(2); });
+        document.getElementById('torus-R-slider').addEventListener('input', function(e) { document.getElementById('torus-R-value').textContent = parseFloat(e.target.value).toFixed(2); });
+        document.getElementById('torus-r-slider').addEventListener('input', function(e) { document.getElementById('torus-r-value').textContent = parseFloat(e.target.value).toFixed(2); });
+        document.getElementById('color-mode').addEventListener('change', function(e) { colorMode = e.target.value; render(); });
+        document.getElementById('init-type').addEventListener('change', function(e) {
+            document.getElementById('gauss-variance-group').style.display = e.target.value === 'gaussian' ? 'block' : 'none';
+        });
+        document.getElementById('coupling-type').addEventListener('change', function(e) {
+            document.getElementById('sigma-group').style.display = e.target.value === 'gaussian' ? 'block' : 'none';
+            document.getElementById('p-group').style.display = e.target.value === 'discrete' ? 'block' : 'none';
+        });
+        
+        document.getElementById('apply-btn').addEventListener('click', function() { if (animationId) cancelAnimationFrame(animationId); isRunning = false; initSimulation(); });
+        document.getElementById('play-btn').addEventListener('click', function() { isRunning = !isRunning; updateUI(); if (isRunning) requestAnimationFrame(animate); });
+        document.getElementById('stop-btn').addEventListener('click', function() { isRunning = false; if (animationId) cancelAnimationFrame(animationId); updateUI(); });
+        document.getElementById('reset-btn').addEventListener('click', function() { if (sim) { sim.reset(); stepCount = 0; isRunning = false; updateUI(); updateStats(); updateClusterDisplay(); render(); renderPlots(); } });
+        
+        document.getElementById('record-btn').addEventListener('click', function() { if (!isRecording) startRecording(); else stopRecording(); });
+        document.getElementById('download-webm-btn').addEventListener('click', downloadWebM);
+        document.getElementById('clear-rec-btn').addEventListener('click', function() { recordedChunks = []; document.getElementById('recording-info').textContent = 'Cleared'; updateUI(); });
+        
+        document.getElementById('export-coords-btn').addEventListener('click', exportCoords);
+        document.getElementById('export-L-btn').addEventListener('click', exportLSeries);
+        document.getElementById('export-clusters-btn').addEventListener('click', exportClusters);
+        document.getElementById('export-close-btn').addEventListener('click', function() { document.getElementById('export-panel').style.display = 'none'; });
+        document.getElementById('export-copy-btn').addEventListener('click', copyExportData);
+        document.getElementById('export-download-btn').addEventListener('click', downloadExportData);
+        
+        document.getElementById('top-view-btn').addEventListener('click', function() { rotation = {y:0, x:Math.PI/2}; render(); });
+        document.getElementById('side-view-btn').addEventListener('click', function() { rotation = {y:0, x:0}; render(); });
+        document.getElementById('reset-view-btn').addEventListener('click', function() { rotation = {y:0.5, x:0.3}; render(); });
+        
+        // Recording settings event listeners
+        document.getElementById('record-interval-slider').addEventListener('input', function(e) {
+            document.getElementById('record-interval-value').textContent = e.target.value;
+            updateRecordingEstimate();
+        });
+        document.getElementById('full-history-checkbox').addEventListener('change', function(e) {
+            document.getElementById('max-history-group').style.display = e.target.checked ? 'none' : 'block';
+            if (sim) {
+                sim.fullHistory = e.target.checked;
+            }
+        });
+        document.getElementById('max-history-slider').addEventListener('input', function(e) {
+            document.getElementById('max-history-value').textContent = e.target.value;
+            if (sim) sim.maxHistory = parseInt(e.target.value);
+        });
+        document.getElementById('max-steps').addEventListener('change', function(e) {
+            maxSteps = parseInt(e.target.value);
+            updateRecordingEstimate();
+        });
+        
+        function updateRecordingEstimate() {
+            var steps = parseInt(document.getElementById('max-steps').value) || 10000;
+            var interval = parseInt(document.getElementById('record-interval-slider').value) || 20;
+            var points = Math.floor(steps / interval);
+            var sizeKB = Math.round(points * 0.05);  // ~50 bytes per line
+            document.getElementById('est-points').textContent = points;
+            document.getElementById('est-size').textContent = sizeKB;
+        }
+        
+        // Mouse drag
+        var isDragging = false, lastMX = 0, lastMY = 0;
+        canvas.addEventListener('mousedown', function(e) { isDragging = true; lastMX = e.clientX; lastMY = e.clientY; canvas.style.cursor = 'grabbing'; });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            rotation.y += (e.clientX - lastMX) * 0.01;
+            rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x + (e.clientY - lastMY) * 0.01));
+            lastMX = e.clientX; lastMY = e.clientY;
+            render();
+        });
+        document.addEventListener('mouseup', function() { isDragging = false; canvas.style.cursor = 'grab'; });
+        canvas.addEventListener('mouseenter', function() { if (!isDragging) canvas.style.cursor = 'grab'; });
+        
+        // Initialize
+        initSimulation();
+        updateRecordingEstimate();
+    </script>
+</body>
+</html>

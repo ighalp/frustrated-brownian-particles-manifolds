@@ -35,7 +35,7 @@ The type of symmetry breaking is determined by the **geometry and topology** of 
 ├── paper/                          # Research paper
 │   └── Frustrated_Brownian_particles_on_manifolds.pdf
 ├── simulator/                      # Interactive simulator
-│   └── brownian_unified_improved.html
+│   └── brownian_unified_tracking_full_history.html
 ├── videos/                         # Recorded simulation playback
 │   ├── brownian_sphere_player.html
 │   ├── brownian_cylinder_player.html
@@ -53,7 +53,7 @@ The type of symmetry breaking is determined by the **geometry and topology** of 
 
 ## Interactive Simulator
 
-Open `simulator/brownian_unified_improved.html` in a web browser to run interactive simulations. The simulator supports:
+Open `simulator/brownian_unified_tracking_full_history.html` in a web browser to run interactive simulations. The simulator supports:
 
 - **Multiple geometries**: Sphere (S²), Cylinder, and Torus
 - **Adjustable parameters**:
