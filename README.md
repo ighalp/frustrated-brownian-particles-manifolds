@@ -41,9 +41,9 @@ The type of symmetry breaking is determined by the **geometry and topology** of 
 │   ├── brownian_cylinder_player.html
 │   └── brownian_torus_player.html
 ├── gifs/                           # Animated GIFs of simulations
-│   ├── Dimension_reduction_on_the_sphere_3.gif
-│   ├── Dimension_reduction_on_the_cylinder_3.gif
-│   ├── Dimension_reduction_on_a_torus_3.gif
+│   ├── Dimension_reduction_on_the_sphere.gif
+│   ├── Dimension_reduction_on_the_cylinder.gif
+│   ├── Dimension_reduction_on_a_torus.gif
 │   └── combined_dimension_reduction.gif
 ├── data/                           # Simulation output data (paper settings)
 │   ├── sphere/                     # Sphere geometry data
