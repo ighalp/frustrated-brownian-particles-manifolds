@@ -79,7 +79,7 @@ pip install numpy matplotlib
 
 Particles move on a curved manifold following overdamped Langevin dynamics:
 
-$$d\mathbf{x}_i = \frac{1}{\gamma}\sum_j \phi_{ij} \nabla_i d(\mathbf{x}_i, \mathbf{x}_j) \, dt + \sqrt{2D} \, d\mathbf{W}_i$$
+$$d\mathbf{x}_i = \frac{1}{\gamma}\sum_j \phi_{ij} \nabla_i d(\mathbf{x}_i, \mathbf{x}_j) \, dt + \sqrt{2D} \; d\mathbf{W}_i$$
 
 where:
 - $d(\mathbf{x}_i, \mathbf{x}_j)$ is the geodesic distance between particles
