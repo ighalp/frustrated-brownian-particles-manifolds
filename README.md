@@ -6,7 +6,28 @@ The work studies frustrated Brownian particles on curved 2D manifolds (sphere, c
 
 ## Overview
 
-The model explores the dynamics of interacting Brownian particles constrained to move on curved surfaces. Each pair of particles has a random coupling (either attractive or repulsive), leading to frustrated dynamics and interesting emergent collective behavior.
+This work studies **frustrated Brownian particles** on 2D Riemannian manifolds (sphere, cylinder, torus) with **spin-glass-like disordered interactions**. Each pair of particles has a random coupling (either attractive or repulsive), creating frustration analogous to conflicting spin alignments in disordered magnets.
+
+### Main Findings
+
+The central phenomenon is **dynamic dimension reduction** accompanied by **spontaneous breaking of rotational symmetry** and emergence of **non-equilibrium steady states (NESS)**. From three minimal ingredients—Brownian noise, quenched random couplings, and manifold geometry—ordered structures emerge spontaneously:
+
+- **Sphere**: Particles form a great-circle band (SO(3) → SO(2) symmetry breaking)
+- **Torus**: Particles organize into two minor-circle rings (SO(2)×SO(2) → SO(2)×Z₂)
+- **Cylinder**: Particles localize into discrete clusters near boundaries (SO(2) → Z₂)
+
+The type of symmetry breaking is determined by the **geometry and topology** of the manifold: closed manifolds produce extended structures wrapping closed geodesics, while bounded manifolds produce localized clusters.
+
+### Applications
+
+**Soft Matter and Biophysics**: The model serves as a benchmark for investigating collective behavior of particles on curved surfaces. Experimental realizations include colloidal particles confined to curved liquid interfaces, molecules adsorbed on nanotubes or vesicles, proteins diffusing on cell membranes, and active matter on curved substrates. The phenomena documented—frustration-induced dimensional reduction, slow collective modes, geometry-dependent anomalous diffusion—should be directly accessible to experiment.
+
+**Theoretical Physics**: The model provides a toy system for studying non-perturbative phenomena in condensed matter physics and quantum field theory (QFT). Connections include:
+- Instanton-like transitions between configurations
+- Analogies to quark confinement in QCD (linear potential, dimensional confinement)
+- Magnetic monopole configurations on S²
+- Dissipative Nambu-Goldstone modes in open systems
+- Classical stochastic realizations of symmetry breaking patterns
 
 ## Repository Structure
 
