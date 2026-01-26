@@ -1,6 +1,8 @@
-# Frustrated Brownian Particles on Manifolds
+# Order Out of Noise and Disorder: Fate of the Frustrated Manifold
 
-This repository contains simulation code, visualizations, and data for the study of frustrated Brownian particles on curved 2D manifolds (sphere, cylinder, and torus).
+This repository contains simulation code, visualizations, and data for the paper "Order Out of Noise and Disorder: Fate of the Frustrated Manifold" by Igor Halperin.
+
+The work studies frustrated Brownian particles on curved 2D manifolds (sphere, cylinder, and torus).
 
 ## Overview
 
@@ -90,9 +92,10 @@ where:
 If you use this code in your research, please cite:
 
 ```
-@article{frustrated_brownian_manifolds,
-  title={Frustrated Brownian Particles on Manifolds},
-  author={[Author Name]},
+@article{halperin2025order,
+  title={Order Out of Noise and Disorder: Fate of the Frustrated Manifold},
+  author={Halperin, Igor},
+  journal={arXiv preprint arXiv:XXXX.XXXXX},
   year={2025}
 }
 ```
