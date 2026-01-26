@@ -36,11 +36,16 @@ The type of symmetry breaking is determined by the **geometry and topology** of 
 │   └── Frustrated_Brownian_particles_on_manifolds.pdf
 ├── simulator/                      # Interactive simulator
 │   └── brownian_unified_tracking_full_history.html
-├── videos/                         # Recorded simulation playback
+├── videos/                         # Recorded simulation playback (paper settings)
 │   ├── brownian_sphere_player.html
 │   ├── brownian_cylinder_player.html
 │   └── brownian_torus_player.html
-├── data/                           # Simulation output data
+├── gifs/                           # Animated GIFs of simulations
+│   ├── Dimension_reduction_on_the_sphere_3.gif
+│   ├── Dimension_reduction_on_the_cylinder_3.gif
+│   ├── Dimension_reduction_on_a_torus_3.gif
+│   └── combined_dimension_reduction.gif
+├── data/                           # Simulation output data (paper settings)
 │   ├── sphere/                     # Sphere geometry data
 │   ├── cylinder/                   # Cylinder geometry data
 │   └── torus/                      # Torus geometry data
@@ -67,20 +72,24 @@ Open `simulator/brownian_unified_tracking_full_history.html` in a web browser to
 
 ## Recorded Simulations
 
-The `videos/` directory contains pre-recorded simulations that can be played back by opening the HTML files in a browser:
+The `videos/` directory contains pre-recorded simulations **for the parameter settings used in the paper**. These can be played back by opening the HTML files in a browser:
 
 - `brownian_sphere_player.html` - Simulation on the 2-sphere
 - `brownian_cylinder_player.html` - Simulation on a cylinder
 - `brownian_torus_player.html` - Simulation on a torus
 
+Users can create their own videos with different parameter settings by running the interactive simulator and using its recording capability.
+
 ## Data Format
 
-The CSV files in `data/` contain:
+The `data/` directory contains simulation output data **for the parameter settings used in the paper**. The CSV files include:
 
 - **Coords_*.csv**: Particle coordinates over time
 - **Clusters_*.csv**: Cluster assignment data
 - **L_series_*.csv**: Angular momentum time series
 - **Rings_*.csv**: Ring structure data (torus only)
+
+Users can generate their own datasets by running the simulator and using its data export functionality.
 
 ## Python Code
 
