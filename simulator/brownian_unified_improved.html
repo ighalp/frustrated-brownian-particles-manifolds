@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomly Interacting Brownian Particles on Curved Manifolds (Improved Torus Metric)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 16px; color: #f8fafc; }
+        .container { display: flex; gap: 16px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+        .controls {
+            width: 280px;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            flex-shrink: 0;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .main {
+            flex: 1;
+            min-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #334155;
+            color: #94a3b8;
+        }
+        .control-group { margin-bottom: 16px; }
+        label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #334155;
+            border-radius: 3px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background: #334155;
+            border: none;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+        .seed-row { display: flex; gap: 8px; }
+        .seed-row > div { flex: 1; }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+        button:hover { transform: translateY(-1px); }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #22c55e; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-secondary { background: #475569; color: white; }
+        canvas { border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+        .stats span { color: #64748b; }
+        .stats .value { color: #e2e8f0; }
+        .stats .energy-pos { color: #ef4444; }
+        .stats .energy-neg { color: #22c55e; }
+        .stats .time { color: #3b82f6; }
+        .stats .rec { color: #ef4444; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .play-controls { display: flex; gap: 12px; margin-top: 16px; }
+        .play-controls button { width: auto; padding: 12px 32px; border-radius: 24px; margin: 0; }
+        .info { margin-top: 16px; font-size: 12px; color: #64748b; text-align: center; max-width: 550px; }
+        hr { border: none; border-top: 1px solid #334155; margin: 16px 0; }
+        .recording-info { 
+            font-size: 13px; 
+            color: #94a3b8; 
+            margin: 8px 0;
+            padding: 8px;
+            background: #334155;
+            border-radius: 6px;
+            text-align: center;
+        }
+        #export-status {
+            font-size: 12px;
+            color: #22c55e;
+            text-align: center;
+        }
+        .coupling-info {
+            background: #334155;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+        .geometry-highlight {
+            background: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Randomly Interacting Brownian Particles on Curved Manifolds</h1>
+    <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: -10px; margin-bottom: 16px;">Torus uses midpoint-metric approximation for improved geodesic distance accuracy</p>
+    
+    <div class="container">
+        <div class="controls">
+            <h2>Geometry</h2>
+            
+            <div class="control-group">
+                <label>Surface Type</label>
+                <select id="geometry-type" class="geometry-highlight">
+                    <option value="sphere">Sphere S²</option>
+                    <option value="cylinder">Cylinder</option>
+                    <option value="torus">Torus T²</option>
+                </select>
+            </div>
+            
+            <div id="cylinder-params" style="display:none;">
+                <div class="control-group">
+                    <label>Radius (R): <span id="cyl-r-value">1.00</span></label>
+                    <input type="range" id="cyl-r-slider" min="0.3" max="2" step="0.05" value="1.0">
+                </div>
+                
+                <div class="control-group">
+                    <label>Height (H): <span id="cyl-h-value">3.00</span></label>
+                    <input type="range" id="cyl-h-slider" min="1" max="6" step="0.1" value="3.0">
+                </div>
+                
+                <div class="control-group">
+                    <label>Z Boundary Condition</label>
+                    <select id="z-boundary">
+                        <option value="periodic">Periodic (wrap around)</option>
+                        <option value="reflective" selected>Reflective (hard walls)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="torus-params" style="display:none;">
+                <div class="control-group">
+                    <label>Parameterization</label>
+                    <select id="torus-param-type">
+                        <option value="radii">Major & Minor Radii (R, r)</option>
+                        <option value="ratio">Aspect Ratio & Scale</option>
+                    </select>
+                </div>
+                
+                <div id="torus-radii-params">
+                    <div class="control-group">
+                        <label>Major Radius (R): <span id="torus-R-value">1.50</span></label>
+                        <input type="range" id="torus-R-slider" min="0.5" max="3" step="0.05" value="1.5">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Minor Radius (r): <span id="torus-r-value">0.50</span></label>
+                        <input type="range" id="torus-r-slider" min="0.1" max="1.5" step="0.05" value="0.5">
+                    </div>
+                </div>
+                
+                <div id="torus-ratio-params" style="display:none;">
+                    <div class="control-group">
+                        <label>Aspect Ratio (R/r): <span id="torus-ratio-value">3.00</span></label>
+                        <input type="range" id="torus-ratio-slider" min="1.5" max="10" step="0.1" value="3.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Scale (r): <span id="torus-scale-value">0.50</span></label>
+                        <input type="range" id="torus-scale-slider" min="0.1" max="1.5" step="0.05" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="coupling-info" id="torus-info">Torus: R=1.50, r=0.50</div>
+            </div>
+            
+            <h2>Parameters</h2>
+            
+            <div class="control-group">
+                <label>Particles (N): <span id="n-value">100</span></label>
+                <input type="range" id="n-slider" min="2" max="500" value="100">
+            </div>
+            
+            <div class="control-group">
+                <label>Temperature (T): <span id="t-value">0.30</span></label>
+                <input type="range" id="t-slider" min="0.01" max="2" step="0.01" value="0.3">
+            </div>
+            
+            <h2>Couplings φᵢⱼ</h2>
+            
+            <div class="control-group">
+                <label>Coupling Type</label>
+                <select id="coupling-type">
+                    <option value="gaussian">Gaussian N(0, σ²)</option>
+                    <option value="discrete">Discrete ±1</option>
+                </select>
+            </div>
+            
+            <div class="control-group" id="sigma-group">
+                <label>σ (std dev): <span id="sigma-value">1.00</span></label>
+                <input type="range" id="sigma-slider" min="0.01" max="10" step="0.01" value="1">
+            </div>
+            
+            <div class="control-group" id="p-group" style="display:none;">
+                <label>p (prob +1): <span id="p-value">0.500</span></label>
+                <input type="range" id="p-slider" min="0" max="1" step="0.001" value="0.5">
+            </div>
+            
+            <h2>Simulation</h2>
+            
+            <div class="control-group">
+                <label>Speed (steps/frame): <span id="speed-value">5</span></label>
+                <input type="range" id="speed-slider" min="1" max="30" value="5">
+            </div>
+            
+            <div class="control-group">
+                <label>Particle Coloring</label>
+                <select id="color-mode">
+                    <option value="none">Uniform (red)</option>
+                    <option value="kinetic" selected>Kinetic Energy</option>
+                    <option value="total">Total Energy (K+U)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="show-labels" style="width:auto; margin-right:6px;">
+                    Show particle labels (N≤20)
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="show-interactions" style="width:auto; margin-right:6px;">
+                    Show interaction lines (N≤15)
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <label>Playback FPS: <span id="fps-value">60</span></label>
+                <input type="range" id="fps-slider" min="1" max="60" value="60">
+            </div>
+            
+            <div class="control-group">
+                <label>Max Steps</label>
+                <select id="max-steps">
+                    <option value="0">Unlimited (manual stop)</option>
+                    <option value="1000">1,000 steps</option>
+                    <option value="5000">5,000 steps</option>
+                    <option value="10000" selected>10,000 steps</option>
+                    <option value="25000">25,000 steps</option>
+                    <option value="50000">50,000 steps</option>
+                    <option value="100000">100,000 steps</option>
+                </select>
+            </div>
+            
+            <div class="control-group seed-row">
+                <div>
+                    <label>φᵢⱼ Seed</label>
+                    <input type="number" id="coupling-seed" value="42">
+                </div>
+                <div>
+                    <label>Init Seed</label>
+                    <input type="number" id="init-seed" value="123">
+                </div>
+            </div>
+            
+            <hr>
+            
+            <h2>3D View Controls</h2>
+            
+            <div class="control-group">
+                <label>Horizontal Rotation: <span id="rot-y-value">29°</span></label>
+                <input type="range" id="rot-y-slider" min="-180" max="180" step="1" value="29">
+            </div>
+            
+            <div class="control-group">
+                <label>Vertical Tilt: <span id="rot-x-value">17°</span></label>
+                <input type="range" id="rot-x-slider" min="-90" max="90" step="1" value="17">
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="auto-rotate" style="width:auto; margin-right:6px;">
+                    Auto-rotate view
+                </label>
+            </div>
+            
+            <button class="btn-secondary" id="reset-view-btn">Reset View</button>
+            <button class="btn-secondary" id="top-view-btn" style="margin-top:4px;">Top View</button>
+            <button class="btn-secondary" id="side-view-btn" style="margin-top:4px;">Side View</button>
+            
+            <div style="margin-top:8px; font-size:11px; color:#64748b;">💡 Drag on canvas to rotate view</div>
+            
+            <hr>
+            
+            <h2>Initial Condition</h2>
+            
+            <div class="control-group">
+                <label>Distribution Type</label>
+                <select id="init-type">
+                    <option value="uniform">Uniform (random)</option>
+                    <option value="gaussian">Gaussian cluster</option>
+                    <option value="ring" id="ring-option" style="display:none;">Ring (cylinder/torus)</option>
+                </select>
+            </div>
+            
+            <div class="control-group" id="gauss-variance-group" style="display:none;">
+                <label>Gaussian σ (spread): <span id="gauss-variance-value">0.30</span></label>
+                <input type="range" id="gauss-variance-slider" min="0.01" max="1.5" step="0.01" value="0.30">
+            </div>
+            
+            <div class="coupling-info" id="init-info">Initial: Uniform random on surface</div>
+            
+            <div class="coupling-info" id="coupling-info">Couplings: φᵢⱼ ~ N(0, 1.00²)</div>
+            
+            <button class="btn-primary" id="apply-btn">Apply and Reset</button>
+            
+            <hr>
+            
+            <h2>Recording</h2>
+            <button class="btn-danger" id="record-btn">⏺ Start Recording</button>
+            <div class="recording-info" id="recording-info">No recording yet</div>
+            <button class="btn-primary" id="download-mp4-btn" style="display:none;">⬇ Download Video (WebM)</button>
+            <button class="btn-success" id="download-html-btn" style="display:none;">⬇ Download HTML Player</button>
+            <button class="btn-secondary" id="clear-btn" style="display:none;">🗑 Clear Recording</button>
+            <div id="export-status" style="display:none; margin-top:8px; padding:8px; background:#334155; border-radius:6px; font-size:12px;"></div>
+            <div style="margin-top:8px; font-size:11px; color:#64748b;">Tip: Convert WebM to GIF/MP4 at <a href="https://cloudconvert.com" target="_blank" style="color:#3b82f6;">cloudconvert.com</a></div>
+        </div>
+        
+        <div class="main">
+            <canvas id="canvas" width="600" height="550"></canvas>
+            
+            <div class="stats">
+                <div><span>Geom:</span> <span class="value" id="stat-geom">S²</span></div>
+                <div><span>N:</span> <span class="value" id="stat-n">100</span></div>
+                <div><span>T:</span> <span class="value" id="stat-t">0.30</span></div>
+                <div id="stat-cyl-params" style="display:none;"><span>R:</span> <span class="value" id="stat-r">1.00</span> <span>H:</span> <span class="value" id="stat-h">3.00</span></div>
+                <div id="stat-torus-params" style="display:none;"><span>R:</span> <span class="value" id="stat-torus-R">1.50</span> <span>r:</span> <span class="value" id="stat-torus-r">0.50</span></div>
+                <div><span>E:</span> <span class="value" id="stat-e">0.0</span></div>
+                <div><span>t:</span> <span class="time" id="stat-time">0.00</span></div>
+                <div><span>Steps:</span> <span class="value" id="stat-steps">0 / 10000</span></div>
+                <div id="rec-indicator" style="display:none;"><span class="rec">REC</span></div>
+            </div>
+            
+            <div class="play-controls">
+                <button class="btn-success" id="play-btn">▶ Play</button>
+                <button class="btn-danger" id="stop-btn">⏹ Stop</button>
+                <button class="btn-secondary" id="reset-btn">↺ Reset</button>
+            </div>
+            
+            <div class="info" id="physics-info">
+                <strong>Physics:</strong> U(xᵢ,xⱼ) = φᵢⱼ · d(xᵢ,xⱼ) where d = geodesic distance on S²<br>
+                φ &gt; 0 → repulsion | φ &lt; 0 → attraction | Random couplings create glassy dynamics
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== UNIFIED SIMULATION CLASS ====================
+        function BrownianSimulation(geometry, params) {
+            this.geometry = geometry; // 'sphere', 'cylinder', or 'torus'
+            this.N = params.N;
+            this.T = params.temperature;
+            this.gamma = 1.0;
+            this.D = this.T / this.gamma;
+            this.dt = 0.005;
+            this.time = 0;
+            
+            // Geometry-specific parameters
+            if (geometry === 'cylinder') {
+                this.cylR = params.cylRadius;
+                this.cylH = params.cylHeight;
+                this.zBoundary = params.zBoundary;
+            } else if (geometry === 'torus') {
+                this.torusR = params.torusR; // Major radius
+                this.torusr = params.torusr; // Minor radius
+            } else {
+                this.sphereR = 1.0;
+            }
+            
+            // Create seeded RNGs
+            var seed1 = params.initSeed;
+            this.rng = function() {
+                seed1 = (seed1 * 1103515245 + 12345) & 0x7fffffff;
+                return seed1 / 0x7fffffff;
+            };
+            
+            var seed2 = params.couplingSeed;
+            this.couplingRng = function() {
+                seed2 = (seed2 * 1103515245 + 12345) & 0x7fffffff;
+                return seed2 / 0x7fffffff;
+            };
+            
+            // Initialize positions
+            this.positions = this.initializePositions(params.initType, params.gaussVariance);
+            this.initialPositions = this.copyPositions(this.positions);
+            
+            // Generate couplings
+            this.phi = this.generateCouplings(params.couplingType, params.sigma, params.p);
+        }
+        
+        BrownianSimulation.prototype.gaussianRandom = function(rng) {
+            var u1 = rng();
+            var u2 = rng();
+            return Math.sqrt(-2 * Math.log(u1 + 1e-10)) * Math.cos(2 * Math.PI * u2);
+        };
+        
+        BrownianSimulation.prototype.copyPositions = function(positions) {
+            var copy = [];
+            for (var i = 0; i < positions.length; i++) {
+                copy.push(positions[i].slice());
+            }
+            return copy;
+        };
+        
+        // ==================== POSITION INITIALIZATION ====================
+        BrownianSimulation.prototype.initializePositions = function(initType, gaussVariance) {
+            if (this.geometry === 'sphere') {
+                return this.initSpherePositions(initType, gaussVariance);
+            } else if (this.geometry === 'cylinder') {
+                return this.initCylinderPositions(initType, gaussVariance);
+            } else {
+                return this.initTorusPositions(initType, gaussVariance);
+            }
+        };
+        
+        BrownianSimulation.prototype.initSpherePositions = function(initType, gaussVariance) {
+            var positions = [];
+            
+            if (initType === 'gaussian') {
+                // Gaussian cluster around a random center
+                var cx = this.gaussianRandom(this.rng);
+                var cy = this.gaussianRandom(this.rng);
+                var cz = this.gaussianRandom(this.rng);
+                var cNorm = Math.sqrt(cx*cx + cy*cy + cz*cz);
+                var center = [cx/cNorm, cy/cNorm, cz/cNorm];
+                
+                // Create tangent basis
+                var ref = Math.abs(center[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+                var dot = ref[0]*center[0] + ref[1]*center[1] + ref[2]*center[2];
+                var t1 = [ref[0] - dot*center[0], ref[1] - dot*center[1], ref[2] - dot*center[2]];
+                var t1Norm = Math.sqrt(t1[0]*t1[0] + t1[1]*t1[1] + t1[2]*t1[2]);
+                t1 = [t1[0]/t1Norm, t1[1]/t1Norm, t1[2]/t1Norm];
+                var t2 = [
+                    center[1]*t1[2] - center[2]*t1[1],
+                    center[2]*t1[0] - center[0]*t1[2],
+                    center[0]*t1[1] - center[1]*t1[0]
+                ];
+                
+                for (var i = 0; i < this.N; i++) {
+                    var u = this.gaussianRandom(this.rng) * gaussVariance;
+                    var v = this.gaussianRandom(this.rng) * gaussVariance;
+                    var px = center[0] + u*t1[0] + v*t2[0];
+                    var py = center[1] + u*t1[1] + v*t2[1];
+                    var pz = center[2] + u*t1[2] + v*t2[2];
+                    var pNorm = Math.sqrt(px*px + py*py + pz*pz);
+                    positions.push([px/pNorm, py/pNorm, pz/pNorm]);
+                }
+            } else {
+                // Uniform random on sphere
+                for (var i = 0; i < this.N; i++) {
+                    var x = this.gaussianRandom(this.rng);
+                    var y = this.gaussianRandom(this.rng);
+                    var z = this.gaussianRandom(this.rng);
+                    var norm = Math.sqrt(x*x + y*y + z*z);
+                    positions.push([x/norm, y/norm, z/norm]);
+                }
+            }
+            return positions;
+        };
+        
+        BrownianSimulation.prototype.initCylinderPositions = function(initType, gaussVariance) {
+            var positions = [];
+            var H = this.cylH;
+            
+            if (initType === 'gaussian') {
+                var centerTheta = this.rng() * 2 * Math.PI;
+                var centerZ = (this.rng() - 0.5) * H * 0.5;
+                
+                for (var i = 0; i < this.N; i++) {
+                    var dTheta = this.gaussianRandom(this.rng) * gaussVariance / this.cylR;
+                    var dZ = this.gaussianRandom(this.rng) * gaussVariance;
+                    var theta = ((centerTheta + dTheta) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    var z = this.applyZBoundary(centerZ + dZ);
+                    positions.push([theta, z]);
+                }
+            } else if (initType === 'ring') {
+                for (var i = 0; i < this.N; i++) {
+                    var theta = (i / this.N) * 2 * Math.PI;
+                    var z = this.applyZBoundary(this.gaussianRandom(this.rng) * 0.1);
+                    positions.push([theta, z]);
+                }
+            } else {
+                for (var i = 0; i < this.N; i++) {
+                    var theta = this.rng() * 2 * Math.PI;
+                    var z = (this.rng() - 0.5) * H;
+                    positions.push([theta, z]);
+                }
+            }
+            return positions;
+        };
+        
+        BrownianSimulation.prototype.initTorusPositions = function(initType, gaussVariance) {
+            var positions = [];
+            // Torus positions: [theta, phi] where theta is major angle, phi is minor angle
+            // Both in [0, 2π)
+            
+            if (initType === 'gaussian') {
+                var centerTheta = this.rng() * 2 * Math.PI;
+                var centerPhi = this.rng() * 2 * Math.PI;
+                
+                for (var i = 0; i < this.N; i++) {
+                    var dTheta = this.gaussianRandom(this.rng) * gaussVariance / this.torusR;
+                    var dPhi = this.gaussianRandom(this.rng) * gaussVariance / this.torusr;
+                    var theta = ((centerTheta + dTheta) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    var phi = ((centerPhi + dPhi) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    positions.push([theta, phi]);
+                }
+            } else if (initType === 'ring') {
+                // Ring around the major circle (phi = 0, varying theta)
+                for (var i = 0; i < this.N; i++) {
+                    var theta = (i / this.N) * 2 * Math.PI;
+                    var phi = this.gaussianRandom(this.rng) * 0.1;
+                    phi = ((phi % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                    positions.push([theta, phi]);
+                }
+            } else {
+                // Uniform random on torus
+                for (var i = 0; i < this.N; i++) {
+                    var theta = this.rng() * 2 * Math.PI;
+                    var phi = this.rng() * 2 * Math.PI;
+                    positions.push([theta, phi]);
+                }
+            }
+            return positions;
+        };
+        
+        BrownianSimulation.prototype.applyZBoundary = function(z) {
+            var halfH = this.cylH / 2;
+            if (this.zBoundary === 'periodic') {
+                while (z > halfH) z -= this.cylH;
+                while (z < -halfH) z += this.cylH;
+            } else {
+                while (z > halfH || z < -halfH) {
+                    if (z > halfH) z = 2 * halfH - z;
+                    if (z < -halfH) z = -2 * halfH - z;
+                }
+            }
+            return z;
+        };
+        
+        // ==================== COUPLINGS ====================
+        BrownianSimulation.prototype.generateCouplings = function(type, sigma, p) {
+            var phi = [];
+            for (var i = 0; i < this.N; i++) {
+                phi[i] = [];
+                for (var j = 0; j < this.N; j++) {
+                    phi[i][j] = 0;
+                }
+            }
+            for (var i = 0; i < this.N; i++) {
+                for (var j = i + 1; j < this.N; j++) {
+                    var val = (type === 'gaussian') 
+                        ? this.gaussianRandom(this.couplingRng) * sigma
+                        : (this.couplingRng() < p ? 1 : -1);
+                    phi[i][j] = val;
+                    phi[j][i] = val;
+                }
+            }
+            return phi;
+        };
+        
+        // ==================== GEODESIC DISTANCE ====================
+        BrownianSimulation.prototype.geodesicDistance = function(pos_i, pos_j) {
+            if (this.geometry === 'sphere') {
+                var dot = pos_i[0]*pos_j[0] + pos_i[1]*pos_j[1] + pos_i[2]*pos_j[2];
+                return Math.acos(Math.max(-1, Math.min(1, dot)));
+            } else if (this.geometry === 'cylinder') {
+                var dTheta = pos_j[0] - pos_i[0];
+                while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                
+                var dz = pos_j[1] - pos_i[1];
+                if (this.zBoundary === 'periodic') {
+                    while (dz > this.cylH / 2) dz -= this.cylH;
+                    while (dz < -this.cylH / 2) dz += this.cylH;
+                }
+                
+                var arcLength = this.cylR * dTheta;
+                return Math.sqrt(arcLength * arcLength + dz * dz);
+            } else {
+                // Torus: positions are [theta, phi]
+                var dTheta = pos_j[0] - pos_i[0];
+                while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                
+                var dPhi = pos_j[1] - pos_i[1];
+                while (dPhi > Math.PI) dPhi -= 2 * Math.PI;
+                while (dPhi < -Math.PI) dPhi += 2 * Math.PI;
+                
+                // Midpoint-metric approximation for geodesic distance
+                // Uses R_eff = R + r*cos(phi_mid) where phi_mid is the midpoint
+                // This captures the leading-order variation in the torus metric
+                var phiMid = (pos_i[1] + pos_j[1]) / 2;
+                var Reff = this.torusR + this.torusr * Math.cos(phiMid);
+                var arcTheta = Reff * dTheta;
+                var arcPhi = this.torusr * dPhi;
+                return Math.sqrt(arcTheta * arcTheta + arcPhi * arcPhi);
+            }
+        };
+        
+        // ==================== ENERGY CALCULATIONS ====================
+        BrownianSimulation.prototype.totalEnergy = function() {
+            var energy = 0;
+            for (var i = 0; i < this.N; i++) {
+                for (var j = i + 1; j < this.N; j++) {
+                    energy += this.phi[i][j] * this.geodesicDistance(this.positions[i], this.positions[j]);
+                }
+            }
+            return energy;
+        };
+        
+        BrownianSimulation.prototype.particleEnergies = function() {
+            var energies = [];
+            for (var i = 0; i < this.N; i++) {
+                var ei = 0;
+                for (var j = 0; j < this.N; j++) {
+                    if (i !== j) {
+                        ei += 0.5 * this.phi[i][j] * this.geodesicDistance(this.positions[i], this.positions[j]);
+                    }
+                }
+                energies.push(ei);
+            }
+            return energies;
+        };
+        
+        BrownianSimulation.prototype.particleKineticEnergies = function() {
+            var forces = this.computeForces();
+            var energies = [];
+            for (var i = 0; i < this.N; i++) {
+                var f = forces[i];
+                var fMag2 = 0;
+                for (var k = 0; k < f.length; k++) {
+                    fMag2 += f[k] * f[k];
+                }
+                energies.push(fMag2);
+            }
+            return energies;
+        };
+        
+        // ==================== FORCE COMPUTATION ====================
+        BrownianSimulation.prototype.computeForces = function() {
+            if (this.geometry === 'sphere') {
+                return this.computeSphereForces();
+            } else if (this.geometry === 'cylinder') {
+                return this.computeCylinderForces();
+            } else {
+                return this.computeTorusForces();
+            }
+        };
+        
+        BrownianSimulation.prototype.computeSphereForces = function() {
+            var forces = [];
+            for (var i = 0; i < this.N; i++) {
+                forces[i] = [0, 0, 0];
+            }
+            
+            for (var i = 0; i < this.N; i++) {
+                var xi = this.positions[i];
+                for (var j = 0; j < this.N; j++) {
+                    if (i === j) continue;
+                    var xj = this.positions[j];
+                    var dot = xi[0]*xj[0] + xi[1]*xj[1] + xi[2]*xj[2];
+                    var d = Math.acos(Math.max(-1, Math.min(1, dot)));
+                    if (d < 1e-8) continue;
+                    
+                    var proj = [xj[0] - dot*xi[0], xj[1] - dot*xi[1], xj[2] - dot*xi[2]];
+                    var projNorm = Math.sqrt(proj[0]*proj[0] + proj[1]*proj[1] + proj[2]*proj[2]);
+                    if (projNorm < 1e-8) continue;
+                    
+                    var tangent = [proj[0]/projNorm, proj[1]/projNorm, proj[2]/projNorm];
+                    var phiij = this.phi[i][j];
+                    forces[i][0] += phiij * tangent[0];
+                    forces[i][1] += phiij * tangent[1];
+                    forces[i][2] += phiij * tangent[2];
+                }
+            }
+            return forces;
+        };
+        
+        BrownianSimulation.prototype.computeCylinderForces = function() {
+            var forces = [];
+            for (var i = 0; i < this.N; i++) {
+                forces[i] = [0, 0];
+            }
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos_i = this.positions[i];
+                for (var j = 0; j < this.N; j++) {
+                    if (i === j) continue;
+                    var pos_j = this.positions[j];
+                    
+                    var dTheta = pos_j[0] - pos_i[0];
+                    while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                    while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                    
+                    var dz = pos_j[1] - pos_i[1];
+                    if (this.zBoundary === 'periodic') {
+                        while (dz > this.cylH / 2) dz -= this.cylH;
+                        while (dz < -this.cylH / 2) dz += this.cylH;
+                    }
+                    
+                    var arcLength = this.cylR * dTheta;
+                    var d = Math.sqrt(arcLength * arcLength + dz * dz);
+                    if (d < 1e-8) continue;
+                    
+                    var phiij = this.phi[i][j];
+                    forces[i][0] += phiij * (arcLength / d) / this.cylR;
+                    forces[i][1] += phiij * (dz / d);
+                }
+            }
+            return forces;
+        };
+        
+        BrownianSimulation.prototype.computeTorusForces = function() {
+            var forces = [];
+            for (var i = 0; i < this.N; i++) {
+                forces[i] = [0, 0]; // [force_theta, force_phi]
+            }
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos_i = this.positions[i];
+                var phi_i = pos_i[1];
+                // Metric coefficient at particle i's position
+                var Ri = this.torusR + this.torusr * Math.cos(phi_i);
+                
+                for (var j = 0; j < this.N; j++) {
+                    if (i === j) continue;
+                    var pos_j = this.positions[j];
+                    
+                    var dTheta = pos_j[0] - pos_i[0];
+                    while (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                    while (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                    
+                    var dPhi = pos_j[1] - pos_i[1];
+                    while (dPhi > Math.PI) dPhi -= 2 * Math.PI;
+                    while (dPhi < -Math.PI) dPhi += 2 * Math.PI;
+                    
+                    // Midpoint-metric approximation for distance
+                    var phiMid = (pos_i[1] + pos_j[1]) / 2;
+                    var Reff = this.torusR + this.torusr * Math.cos(phiMid);
+                    var arcTheta = Reff * dTheta;
+                    var arcPhi = this.torusr * dPhi;
+                    var d = Math.sqrt(arcTheta * arcTheta + arcPhi * arcPhi);
+                    if (d < 1e-8) continue;
+                    
+                    var phiij = this.phi[i][j];
+                    // Force in arc-length coordinates, then convert to coordinate forces
+                    // using the metric at particle i's position
+                    forces[i][0] += phiij * (arcTheta / d) / Ri;
+                    forces[i][1] += phiij * (arcPhi / d) / this.torusr;
+                }
+            }
+            return forces;
+        };
+        
+        // ==================== SIMULATION STEP ====================
+        BrownianSimulation.prototype.step = function() {
+            if (this.geometry === 'sphere') {
+                this.stepSphere();
+            } else if (this.geometry === 'cylinder') {
+                this.stepCylinder();
+            } else {
+                this.stepTorus();
+            }
+            this.time += this.dt;
+        };
+        
+        BrownianSimulation.prototype.stepSphere = function() {
+            var forces = this.computeForces();
+            var sqrtTerm = Math.sqrt(2 * this.D * this.dt);
+            
+            for (var i = 0; i < this.N; i++) {
+                var xi = this.positions[i];
+                var noise = [this.gaussianRandom(this.rng), this.gaussianRandom(this.rng), this.gaussianRandom(this.rng)];
+                
+                var dotNoise = noise[0]*xi[0] + noise[1]*xi[1] + noise[2]*xi[2];
+                var noiseTangent = [noise[0] - dotNoise*xi[0], noise[1] - dotNoise*xi[1], noise[2] - dotNoise*xi[2]];
+                
+                var newPos = [
+                    xi[0] + forces[i][0] / this.gamma * this.dt + sqrtTerm * noiseTangent[0],
+                    xi[1] + forces[i][1] / this.gamma * this.dt + sqrtTerm * noiseTangent[1],
+                    xi[2] + forces[i][2] / this.gamma * this.dt + sqrtTerm * noiseTangent[2]
+                ];
+                var norm = Math.sqrt(newPos[0]*newPos[0] + newPos[1]*newPos[1] + newPos[2]*newPos[2]);
+                this.positions[i] = [newPos[0]/norm, newPos[1]/norm, newPos[2]/norm];
+            }
+        };
+        
+        BrownianSimulation.prototype.stepCylinder = function() {
+            var forces = this.computeForces();
+            var sqrtTerm = Math.sqrt(2 * this.D * this.dt);
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos = this.positions[i];
+                var noiseTheta = this.gaussianRandom(this.rng) / this.cylR;
+                var noiseZ = this.gaussianRandom(this.rng);
+                
+                var newTheta = pos[0] + forces[i][0] / this.gamma * this.dt + sqrtTerm * noiseTheta;
+                var newZ = pos[1] + forces[i][1] / this.gamma * this.dt + sqrtTerm * noiseZ;
+                
+                newTheta = ((newTheta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                newZ = this.applyZBoundary(newZ);
+                
+                this.positions[i] = [newTheta, newZ];
+            }
+        };
+        
+        BrownianSimulation.prototype.stepTorus = function() {
+            var forces = this.computeForces();
+            var sqrtTerm = Math.sqrt(2 * this.D * this.dt);
+            
+            for (var i = 0; i < this.N; i++) {
+                var pos = this.positions[i];
+                var phi_i = pos[1];
+                // Position-dependent metric coefficient for theta direction
+                var Ri = this.torusR + this.torusr * Math.cos(phi_i);
+                
+                // Noise amplitude depends on position for theta (varies with phi)
+                var noiseTheta = this.gaussianRandom(this.rng) / Ri;
+                var noisePhi = this.gaussianRandom(this.rng) / this.torusr;
+                
+                var newTheta = pos[0] + forces[i][0] / this.gamma * this.dt + sqrtTerm * noiseTheta;
+                var newPhi = pos[1] + forces[i][1] / this.gamma * this.dt + sqrtTerm * noisePhi;
+                
+                // Periodic boundaries for both angles
+                newTheta = ((newTheta % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                newPhi = ((newPhi % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                
+                this.positions[i] = [newTheta, newPhi];
+            }
+        };
+        
+        BrownianSimulation.prototype.reset = function() {
+            this.positions = this.copyPositions(this.initialPositions);
+            this.time = 0;
+        };
+        
+        // ==================== 3D CONVERSION ====================
+        BrownianSimulation.prototype.to3D = function(index) {
+            if (this.geometry === 'sphere') {
+                return this.positions[index];
+            } else if (this.geometry === 'cylinder') {
+                var theta = this.positions[index][0];
+                var z = this.positions[index][1];
+                return [
+                    this.cylR * Math.cos(theta),
+                    this.cylR * Math.sin(theta),
+                    z
+                ];
+            } else {
+                // Torus: x = (R + r*cos(phi)) * cos(theta), y = (R + r*cos(phi)) * sin(theta), z = r*sin(phi)
+                var theta = this.positions[index][0];
+                var phi = this.positions[index][1];
+                var rFactor = this.torusR + this.torusr * Math.cos(phi);
+                return [
+                    rFactor * Math.cos(theta),
+                    rFactor * Math.sin(theta),
+                    this.torusr * Math.sin(phi)
+                ];
+            }
+        };
+        
+        // ==================== 3D PROJECTION ====================
+        function project3D(point, rotationY, rotationX, scale, offsetX, offsetY, geometryType) {
+            var x = point[0], y = point[1], z = point[2];
+            
+            var cosY = Math.cos(rotationY), sinY = Math.sin(rotationY);
+            var x1, y1, z1;
+            
+            if (geometryType === 'cylinder' || geometryType === 'torus') {
+                x1 = x * cosY + y * sinY;
+                y1 = -x * sinY + y * cosY;
+                z1 = z;
+            } else {
+                x1 = x * cosY + z * sinY;
+                z1 = -x * sinY + z * cosY;
+                y1 = y;
+            }
+            
+            var cosX = Math.cos(rotationX), sinX = Math.sin(rotationX);
+            var y2 = y1 * cosX - z1 * sinX;
+            var z2 = y1 * sinX + z1 * cosX;
+            
+            var perspectiveDist = (geometryType === 'cylinder' || geometryType === 'torus') ? 5 : 3;
+            var perspective = perspectiveDist / (perspectiveDist - x1);
+            
+            return {
+                x: offsetX + ((geometryType === 'cylinder' || geometryType === 'torus') ? y2 : x1) * scale * perspective,
+                y: offsetY - ((geometryType === 'cylinder' || geometryType === 'torus') ? z2 : y2) * scale * perspective,
+                z: x1,
+                scale: perspective
+            };
+        }
+        
+        // ==================== COLOR MAPPING ====================
+        function energyToColor(value, minVal, maxVal) {
+            var t = (maxVal > minVal) ? (value - minVal) / (maxVal - minVal) : 0.5;
+            t = Math.max(0, Math.min(1, t));
+            
+            var r, g, b;
+            if (t < 0.25) {
+                var s = t / 0.25;
+                r = 30; g = Math.round(80 + 175 * s); b = 255;
+            } else if (t < 0.5) {
+                var s = (t - 0.25) / 0.25;
+                r = Math.round(30 + 70 * s); g = 255; b = Math.round(255 - 155 * s);
+            } else if (t < 0.75) {
+                var s = (t - 0.5) / 0.25;
+                r = Math.round(100 + 155 * s); g = 255; b = Math.round(100 - 100 * s);
+            } else {
+                var s = (t - 0.75) / 0.25;
+                r = 255; g = Math.round(255 - 200 * s); b = 0;
+            }
+            return { r: r, g: g, b: b };
+        }
+        
+        // ==================== APP STATE ====================
+        var sim = null;
+        var isRunning = false;
+        var rotation = { y: 0.5, x: 0.3 };
+        var stepCount = 0;
+        var animationId = null;
+        var stepsPerFrame = 5;
+        var targetFPS = 60;
+        var maxSteps = 10000;
+        var isRecording = false;
+        var recordedFrames = [];
+        var mediaRecorder = null;
+        var recordedChunks = [];
+        var recordingStartTime = 0;
+        var lastFrameTime = 0;
+        var colorMode = 'kinetic';
+        var showLabels = false;
+        var showInteractions = false;
+        var currentGeometry = 'sphere';
+        var autoRotate = false;
+        var autoRotateSpeed = 0.01;
+        
+        // Mouse drag state for rotation
+        var isDragging = false;
+        var lastMouseX = 0;
+        var lastMouseY = 0;
+        
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        
+        // ==================== INITIALIZATION ====================
+        function initSimulation() {
+            currentGeometry = document.getElementById('geometry-type').value;
+            
+            var params = {
+                N: parseInt(document.getElementById('n-slider').value),
+                temperature: parseFloat(document.getElementById('t-slider').value),
+                couplingType: document.getElementById('coupling-type').value,
+                sigma: parseFloat(document.getElementById('sigma-slider').value),
+                p: parseFloat(document.getElementById('p-slider').value),
+                couplingSeed: parseInt(document.getElementById('coupling-seed').value) || 42,
+                initSeed: parseInt(document.getElementById('init-seed').value) || 123,
+                initType: document.getElementById('init-type').value,
+                gaussVariance: parseFloat(document.getElementById('gauss-variance-slider').value)
+            };
+            
+            if (currentGeometry === 'cylinder') {
+                params.cylRadius = parseFloat(document.getElementById('cyl-r-slider').value);
+                params.cylHeight = parseFloat(document.getElementById('cyl-h-slider').value);
+                params.zBoundary = document.getElementById('z-boundary').value;
+            } else if (currentGeometry === 'torus') {
+                var paramType = document.getElementById('torus-param-type').value;
+                if (paramType === 'radii') {
+                    params.torusR = parseFloat(document.getElementById('torus-R-slider').value);
+                    params.torusr = parseFloat(document.getElementById('torus-r-slider').value);
+                } else {
+                    var ratio = parseFloat(document.getElementById('torus-ratio-slider').value);
+                    var scale = parseFloat(document.getElementById('torus-scale-slider').value);
+                    params.torusr = scale;
+                    params.torusR = ratio * scale;
+                }
+            }
+            
+            maxSteps = parseInt(document.getElementById('max-steps').value);
+            
+            sim = new BrownianSimulation(currentGeometry, params);
+            stepCount = 0;
+            isRunning = false;
+            recordedFrames = [];
+            recordedChunks = [];
+            isRecording = false;
+            document.getElementById('export-status').style.display = 'none';
+            
+            updateUI();
+            updateStats();
+            updateRecordingInfo();
+            updatePhysicsInfo();
+            render();
+        }
+        
+        // ==================== RENDER ====================
+        function render() {
+            var width = canvas.width;
+            var height = canvas.height;
+            
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, width, height);
+            
+            if (!sim) return;
+            
+            var centerX = width / 2;
+            var centerY = height / 2;
+            var geomType = sim.geometry;
+            var scale;
+            if (geomType === 'sphere') {
+                scale = Math.min(width, height) * 0.38;
+            } else if (geomType === 'cylinder') {
+                scale = Math.min(width, height) * 0.13;
+            } else {
+                // Torus - scale based on total size
+                scale = Math.min(width, height) * 0.12;
+            }
+            
+            // Draw wireframe
+            ctx.strokeStyle = 'rgba(100, 150, 200, 0.15)';
+            ctx.lineWidth = 0.5;
+            
+            if (geomType === 'cylinder') {
+                renderCylinderWireframe(centerX, centerY, scale);
+            } else if (geomType === 'torus') {
+                renderTorusWireframe(centerX, centerY, scale);
+            } else {
+                renderSphereWireframe(centerX, centerY, scale);
+            }
+            
+            // Project particles
+            var projected = [];
+            var projectedByIndex = [];
+            for (var i = 0; i < sim.N; i++) {
+                var pos3D = sim.to3D(i);
+                var proj = project3D(pos3D, rotation.y, rotation.x, scale, centerX, centerY, geomType);
+                proj.index = i;
+                projected.push(proj);
+                projectedByIndex.push(proj);
+            }
+            projected.sort(function(a, b) { return a.z - b.z; });
+            
+            // Draw interaction lines
+            var N = sim.N;
+            if (showInteractions && N <= 15) {
+                renderInteractionLines(projectedByIndex, N);
+            }
+            
+            // Compute energies
+            var energies = null;
+            var minE = 0, maxE = 1;
+            if (colorMode === 'kinetic') {
+                energies = sim.particleKineticEnergies();
+                minE = Math.min.apply(null, energies);
+                maxE = Math.max.apply(null, energies);
+            } else if (colorMode === 'total') {
+                var kineticEnergies = sim.particleKineticEnergies();
+                var potentialEnergies = sim.particleEnergies();
+                energies = [];
+                for (var i = 0; i < sim.N; i++) {
+                    energies.push(kineticEnergies[i] + potentialEnergies[i]);
+                }
+                minE = Math.min.apply(null, energies);
+                maxE = Math.max.apply(null, energies);
+            }
+            
+            // Particle sizing
+            var baseSize, perspectiveScale;
+            if (N <= 10) { baseSize = 5; perspectiveScale = 3; }
+            else if (N <= 50) { baseSize = 4; perspectiveScale = 2.5; }
+            else if (N <= 100) { baseSize = 3; perspectiveScale = 2.5; }
+            else if (N <= 200) { baseSize = 2.5; perspectiveScale = 2; }
+            else if (N <= 350) { baseSize = 2; perspectiveScale = 1.5; }
+            else { baseSize = 1.5; perspectiveScale = 1.5; }
+            
+            // Draw particles
+            var depthRange;
+            if (geomType === 'cylinder') {
+                depthRange = sim.cylR;
+            } else if (geomType === 'torus') {
+                depthRange = sim.torusR + sim.torusr;
+            } else {
+                depthRange = 1;
+            }
+            for (var i = 0; i < projected.length; i++) {
+                var particle = projected[i];
+                var alpha = 0.4 + 0.6 * (particle.z + depthRange) / (2 * depthRange);
+                var size = baseSize + perspectiveScale * particle.scale;
+                
+                var color = (colorMode !== 'none' && energies) 
+                    ? energyToColor(energies[particle.index], minE, maxE)
+                    : { r: 239, g: 68, b: 68 };
+                
+                var glowColor = {
+                    r: Math.min(255, color.r + 20),
+                    g: Math.min(255, color.g + 20),
+                    b: Math.min(255, color.b + 20)
+                };
+                var coreColor = {
+                    r: Math.min(255, color.r + 100),
+                    g: Math.min(255, color.g + 100),
+                    b: Math.min(255, color.b + 100)
+                };
+                
+                // Glow
+                var gradient = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, size * 2);
+                gradient.addColorStop(0, 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + alpha + ')');
+                gradient.addColorStop(0.5, 'rgba(' + glowColor.r + ',' + glowColor.g + ',' + glowColor.b + ',' + (alpha * 0.5) + ')');
+                gradient.addColorStop(1, 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, size * 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Core
+                ctx.fillStyle = 'rgba(' + coreColor.r + ',' + coreColor.g + ',' + coreColor.b + ',' + alpha + ')';
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw labels
+            if (showLabels && N <= 20) {
+                ctx.font = 'bold 11px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                for (var i = 0; i < projected.length; i++) {
+                    var particle = projected[i];
+                    var alpha = 0.6 + 0.4 * (particle.z + depthRange) / (2 * depthRange);
+                    var labelOffset = baseSize + perspectiveScale * particle.scale + 8;
+                    
+                    ctx.fillStyle = 'rgba(15, 23, 42, ' + (alpha * 0.8) + ')';
+                    ctx.fillRect(particle.x - 8, particle.y - labelOffset - 8, 16, 14);
+                    ctx.fillStyle = 'rgba(226, 232, 240, ' + alpha + ')';
+                    ctx.fillText(String(particle.index + 1), particle.x, particle.y - labelOffset);
+                }
+            }
+            
+            // Draw legends
+            if (colorMode !== 'none' && energies) {
+                renderColorLegend(width, height, minE, maxE);
+            }
+            if (showInteractions && N <= 15) {
+                renderInteractionLegend(width, height);
+            }
+        }
+        
+        function renderSphereWireframe(centerX, centerY, scale) {
+            // Latitude lines
+            for (var lat = -60; lat <= 60; lat += 30) {
+                var r = Math.cos(lat * Math.PI / 180);
+                var y = Math.sin(lat * Math.PI / 180);
+                ctx.beginPath();
+                for (var lon = 0; lon <= 360; lon += 5) {
+                    var x = r * Math.cos(lon * Math.PI / 180);
+                    var z = r * Math.sin(lon * Math.PI / 180);
+                    var proj = project3D([x, y, z], rotation.y, rotation.x, scale, centerX, centerY, 'sphere');
+                    if (lon === 0) ctx.moveTo(proj.x, proj.y);
+                    else ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+            // Longitude lines
+            for (var lon = 0; lon < 180; lon += 30) {
+                ctx.beginPath();
+                for (var lat = -90; lat <= 90; lat += 5) {
+                    var r = Math.cos(lat * Math.PI / 180);
+                    var y = Math.sin(lat * Math.PI / 180);
+                    var x = r * Math.cos(lon * Math.PI / 180);
+                    var z = r * Math.sin(lon * Math.PI / 180);
+                    var proj = project3D([x, y, z], rotation.y, rotation.x, scale, centerX, centerY, 'sphere');
+                    if (lat === -90) ctx.moveTo(proj.x, proj.y);
+                    else ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+        }
+        
+        function renderCylinderWireframe(centerX, centerY, scale) {
+            var R = sim.cylR;
+            var H = sim.cylH;
+            
+            // Vertical lines
+            for (var i = 0; i < 12; i++) {
+                var theta = (i / 12) * 2 * Math.PI;
+                var x = R * Math.cos(theta);
+                var y = R * Math.sin(theta);
+                var p1 = project3D([x, y, -H/2], rotation.y, rotation.x, scale, centerX, centerY, 'cylinder');
+                var p2 = project3D([x, y, H/2], rotation.y, rotation.x, scale, centerX, centerY, 'cylinder');
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+            
+            // Horizontal rings
+            var numRings = Math.max(3, Math.round(H / 0.5));
+            for (var ring = 0; ring <= numRings; ring++) {
+                var z = -H/2 + (ring / numRings) * H;
+                ctx.beginPath();
+                for (var i = 0; i <= 36; i++) {
+                    var theta = (i / 36) * 2 * Math.PI;
+                    var x = R * Math.cos(theta);
+                    var y = R * Math.sin(theta);
+                    var proj = project3D([x, y, z], rotation.y, rotation.x, scale, centerX, centerY, 'cylinder');
+                    if (i === 0) ctx.moveTo(proj.x, proj.y);
+                    else ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+        }
+        
+        function renderTorusWireframe(centerX, centerY, scale) {
+            var R = sim.torusR;
+            var r = sim.torusr;
+            
+            // Major circles (constant phi)
+            var numMajorCircles = 8;
+            for (var p = 0; p < numMajorCircles; p++) {
+                var phi = (p / numMajorCircles) * 2 * Math.PI;
+                ctx.beginPath();
+                for (var i = 0; i <= 48; i++) {
+                    var theta = (i / 48) * 2 * Math.PI;
+                    var rFactor = R + r * Math.cos(phi);
+                    var x = rFactor * Math.cos(theta);
+                    var y = rFactor * Math.sin(theta);
+                    var z = r * Math.sin(phi);
+                    var proj = project3D([x, y, z], rotation.y, rotation.x, scale, centerX, centerY, 'torus');
+                    if (i === 0) ctx.moveTo(proj.x, proj.y);
+                    else ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+            
+            // Minor circles (constant theta)
+            var numMinorCircles = 16;
+            for (var t = 0; t < numMinorCircles; t++) {
+                var theta = (t / numMinorCircles) * 2 * Math.PI;
+                ctx.beginPath();
+                for (var i = 0; i <= 24; i++) {
+                    var phi = (i / 24) * 2 * Math.PI;
+                    var rFactor = R + r * Math.cos(phi);
+                    var x = rFactor * Math.cos(theta);
+                    var y = rFactor * Math.sin(theta);
+                    var z = r * Math.sin(phi);
+                    var proj = project3D([x, y, z], rotation.y, rotation.x, scale, centerX, centerY, 'torus');
+                    if (i === 0) ctx.moveTo(proj.x, proj.y);
+                    else ctx.lineTo(proj.x, proj.y);
+                }
+                ctx.stroke();
+            }
+        }
+        
+        function renderInteractionLines(projectedByIndex, N) {
+            var maxPhi = 0;
+            for (var i = 0; i < N; i++) {
+                for (var j = i + 1; j < N; j++) {
+                    maxPhi = Math.max(maxPhi, Math.abs(sim.phi[i][j]));
+                }
+            }
+            
+            var depthRange = sim.geometry === 'cylinder' ? sim.cylR : 1;
+            for (var i = 0; i < N; i++) {
+                for (var j = i + 1; j < N; j++) {
+                    var phi = sim.phi[i][j];
+                    if (Math.abs(phi) < 0.01 * maxPhi) continue;
+                    
+                    var p1 = projectedByIndex[i];
+                    var p2 = projectedByIndex[j];
+                    var avgZ = (p1.z + p2.z) / 2;
+                    var alpha = 0.15 + 0.35 * (avgZ + depthRange) / (2 * depthRange);
+                    var strength = Math.abs(phi) / maxPhi;
+                    
+                    ctx.strokeStyle = phi > 0 
+                        ? 'rgba(239, 68, 68, ' + (alpha * strength) + ')'
+                        : 'rgba(34, 197, 94, ' + (alpha * strength) + ')';
+                    ctx.lineWidth = 0.5 + 2 * strength;
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function renderColorLegend(width, height, minE, maxE) {
+            var legendX = 20, legendY = height - 60;
+            var legendWidth = 120, legendHeight = 12;
+            
+            var legendGradient = ctx.createLinearGradient(legendX, 0, legendX + legendWidth, 0);
+            for (var t = 0; t <= 1; t += 0.1) {
+                var c = energyToColor(minE + t * (maxE - minE), minE, maxE);
+                legendGradient.addColorStop(t, 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')');
+            }
+            ctx.fillStyle = legendGradient;
+            ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
+            
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'left';
+            var label = colorMode === 'kinetic' ? 'Kinetic Energy (|F|²)' : 'Total Energy (K+U)';
+            ctx.fillText(label, legendX, legendY - 6);
+            ctx.fillText(minE.toFixed(2), legendX, legendY + legendHeight + 14);
+            ctx.textAlign = 'right';
+            ctx.fillText(maxE.toFixed(2), legendX + legendWidth, legendY + legendHeight + 14);
+        }
+        
+        function renderInteractionLegend(width, height) {
+            var intLegendX = width - 140, intLegendY = height - 50;
+            
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('Interactions:', intLegendX, intLegendY);
+            
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(intLegendX, intLegendY + 15);
+            ctx.lineTo(intLegendX + 25, intLegendY + 15);
+            ctx.stroke();
+            ctx.fillStyle = '#ef4444';
+            ctx.fillText('φ>0 repel', intLegendX + 30, intLegendY + 18);
+            
+            ctx.strokeStyle = 'rgba(34, 197, 94, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(intLegendX, intLegendY + 30);
+            ctx.lineTo(intLegendX + 25, intLegendY + 30);
+            ctx.stroke();
+            ctx.fillStyle = '#22c55e';
+            ctx.fillText('φ<0 attract', intLegendX + 30, intLegendY + 33);
+        }
+        
+        // ==================== ANIMATION ====================
+        function animate(timestamp) {
+            if (!isRunning || !sim) return;
+            
+            var frameInterval = 1000 / targetFPS;
+            if (timestamp - lastFrameTime < frameInterval) {
+                animationId = requestAnimationFrame(animate);
+                return;
+            }
+            lastFrameTime = timestamp;
+            
+            for (var i = 0; i < stepsPerFrame; i++) {
+                sim.step();
+            }
+            stepCount += stepsPerFrame;
+            rotation.y += 0.008;
+            
+            if (maxSteps > 0 && stepCount >= maxSteps) {
+                isRunning = false;
+                if (isRecording) stopRecording();
+                updateUI();
+                updateStats();
+                render();
+                return;
+            }
+            
+            updateStats();
+            render();
+            
+            if (isRecording && stepCount % 3 === 0) {
+                recordedFrames.push(canvas.toDataURL('image/png'));
+                updateRecordingInfo();
+            }
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // ==================== UI UPDATES ====================
+        function updateStats() {
+            if (!sim) return;
+            
+            var geomLabel = sim.geometry === 'sphere' ? 'S²' : (sim.geometry === 'cylinder' ? 'Cyl' : 'T²');
+            document.getElementById('stat-geom').textContent = geomLabel;
+            document.getElementById('stat-n').textContent = sim.N;
+            document.getElementById('stat-t').textContent = sim.T.toFixed(2);
+            
+            var cylParamsEl = document.getElementById('stat-cyl-params');
+            var torusParamsEl = document.getElementById('stat-torus-params');
+            
+            if (sim.geometry === 'cylinder') {
+                cylParamsEl.style.display = 'block';
+                torusParamsEl.style.display = 'none';
+                document.getElementById('stat-r').textContent = sim.cylR.toFixed(2);
+                document.getElementById('stat-h').textContent = sim.cylH.toFixed(2);
+            } else if (sim.geometry === 'torus') {
+                cylParamsEl.style.display = 'none';
+                torusParamsEl.style.display = 'block';
+                document.getElementById('stat-torus-R').textContent = sim.torusR.toFixed(2);
+                document.getElementById('stat-torus-r').textContent = sim.torusr.toFixed(2);
+            } else {
+                cylParamsEl.style.display = 'none';
+                torusParamsEl.style.display = 'none';
+            }
+            
+            var energy = sim.totalEnergy();
+            var energyEl = document.getElementById('stat-e');
+            energyEl.textContent = energy.toFixed(1);
+            energyEl.className = 'value ' + (energy < 0 ? 'energy-neg' : 'energy-pos');
+            
+            document.getElementById('stat-time').textContent = (stepCount * 0.005).toFixed(2);
+            
+            var stepsText = stepCount.toString();
+            stepsText += maxSteps > 0 ? ' / ' + maxSteps : ' / ∞';
+            document.getElementById('stat-steps').textContent = stepsText;
+            
+            document.getElementById('rec-indicator').style.display = isRecording ? 'block' : 'none';
+        }
+        
+        function updateUI() {
+            var playBtn = document.getElementById('play-btn');
+            playBtn.textContent = isRunning ? '⏸ Pause' : '▶ Play';
+            playBtn.className = isRunning ? 'btn-warning' : 'btn-success';
+            
+            var recordBtn = document.getElementById('record-btn');
+            recordBtn.textContent = isRecording ? '⏹ Stop Recording' : '⏺ Start Recording';
+            recordBtn.className = isRecording ? 'btn-warning' : 'btn-danger';
+            
+            var hasFrames = recordedFrames.length > 0;
+            var hasVideo = recordedChunks.length > 0;
+            document.getElementById('download-mp4-btn').style.display = hasVideo ? 'block' : 'none';
+            document.getElementById('download-html-btn').style.display = hasFrames ? 'block' : 'none';
+            document.getElementById('clear-btn').style.display = (hasFrames || hasVideo) ? 'block' : 'none';
+        }
+        
+        function updateRecordingInfo() {
+            var duration = isRecording ? ((Date.now() - recordingStartTime) / 1000).toFixed(1) : (recordedFrames.length / 30).toFixed(1);
+            var info;
+            if (isRecording) {
+                info = 'Recording... ' + recordedFrames.length + ' frames (' + duration + 's)';
+            } else if (recordedFrames.length > 0) {
+                info = 'Recorded: ' + recordedFrames.length + ' frames (~' + duration + 's)';
+            } else {
+                info = 'No recording yet';
+            }
+            document.getElementById('recording-info').textContent = info;
+        }
+        
+        function updateCouplingInfo() {
+            var type = document.getElementById('coupling-type').value;
+            var info;
+            if (type === 'gaussian') {
+                var sigma = parseFloat(document.getElementById('sigma-slider').value);
+                info = 'Couplings: φᵢⱼ ~ N(0, ' + sigma.toFixed(2) + '²)';
+            } else {
+                var p = parseFloat(document.getElementById('p-slider').value);
+                info = 'Couplings: P(φᵢⱼ=+1)=' + p.toFixed(3) + ', P(φᵢⱼ=-1)=' + (1-p).toFixed(3);
+            }
+            document.getElementById('coupling-info').textContent = info;
+        }
+        
+        function updateInitInfo() {
+            var type = document.getElementById('init-type').value;
+            var geom = document.getElementById('geometry-type').value;
+            var info;
+            if (type === 'gaussian') {
+                var sigma = parseFloat(document.getElementById('gauss-variance-slider').value);
+                info = 'Initial: Gaussian cluster (σ=' + sigma.toFixed(2) + ')';
+            } else if (type === 'ring') {
+                info = geom === 'torus' ? 'Initial: Ring around major circle' : 'Initial: Ring around cylinder center';
+            } else {
+                var geomName = geom === 'sphere' ? 'S²' : (geom === 'cylinder' ? 'cylinder' : 'T²');
+                info = 'Initial: Uniform random on ' + geomName;
+            }
+            document.getElementById('init-info').textContent = info;
+        }
+        
+        function updatePhysicsInfo() {
+            var geom = document.getElementById('geometry-type').value;
+            var infoEl = document.getElementById('physics-info');
+            if (geom === 'sphere') {
+                infoEl.innerHTML = '<strong>Physics:</strong> U(xᵢ,xⱼ) = φᵢⱼ · d(xᵢ,xⱼ) where d = geodesic distance on S²<br>φ &gt; 0 → repulsion | φ &lt; 0 → attraction | Random couplings create glassy dynamics';
+            } else if (geom === 'cylinder') {
+                infoEl.innerHTML = '<strong>Physics:</strong> U(xᵢ,xⱼ) = φᵢⱼ · d(xᵢ,xⱼ) where d = geodesic distance on cylinder<br>d² = (RΔθ)² + Δz² | φ &gt; 0 → repulsion | φ &lt; 0 → attraction';
+            } else {
+                infoEl.innerHTML = '<strong>Physics:</strong> U(xᵢ,xⱼ) = φᵢⱼ · d(xᵢ,xⱼ) where d = geodesic distance on torus T²<br>d² ≈ (RΔθ)² + (rΔφ)² | φ &gt; 0 → repulsion | φ &lt; 0 → attraction';
+            }
+        }
+        
+        function updateGeometryUI() {
+            var geom = document.getElementById('geometry-type').value;
+            var cylParams = document.getElementById('cylinder-params');
+            var torusParams = document.getElementById('torus-params');
+            var ringOption = document.getElementById('ring-option');
+            
+            cylParams.style.display = geom === 'cylinder' ? 'block' : 'none';
+            torusParams.style.display = geom === 'torus' ? 'block' : 'none';
+            ringOption.style.display = (geom === 'cylinder' || geom === 'torus') ? 'block' : 'none';
+            
+            // Reset init type if ring was selected but switching to sphere
+            if (geom === 'sphere' && document.getElementById('init-type').value === 'ring') {
+                document.getElementById('init-type').value = 'uniform';
+            }
+            
+            updateInitInfo();
+            updatePhysicsInfo();
+        }
+        
+        function updateTorusInfo() {
+            var paramType = document.getElementById('torus-param-type').value;
+            var R, r;
+            if (paramType === 'radii') {
+                R = parseFloat(document.getElementById('torus-R-slider').value);
+                r = parseFloat(document.getElementById('torus-r-slider').value);
+            } else {
+                var ratio = parseFloat(document.getElementById('torus-ratio-slider').value);
+                var scale = parseFloat(document.getElementById('torus-scale-slider').value);
+                r = scale;
+                R = ratio * scale;
+            }
+            document.getElementById('torus-info').textContent = 'Torus: R=' + R.toFixed(2) + ', r=' + r.toFixed(2);
+        }
+        
+        function updateTorusParamUI() {
+            var paramType = document.getElementById('torus-param-type').value;
+            document.getElementById('torus-radii-params').style.display = paramType === 'radii' ? 'block' : 'none';
+            document.getElementById('torus-ratio-params').style.display = paramType === 'ratio' ? 'block' : 'none';
+            updateTorusInfo();
+        }
+        
+        // ==================== RECORDING ====================
+        function startRecording() {
+            recordedFrames = [];
+            recordedChunks = [];
+            recordingStartTime = Date.now();
+            
+            try {
+                var stream = canvas.captureStream(30);
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+                mediaRecorder.ondataavailable = function(e) {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+                mediaRecorder.onstop = function() { updateUI(); };
+                mediaRecorder.start(100);
+            } catch (err) {
+                console.error('MediaRecorder error:', err);
+                mediaRecorder = null;
+            }
+            
+            isRecording = true;
+        }
+        
+        function stopRecording() {
+            isRecording = false;
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            setTimeout(function() { updateUI(); }, 200);
+        }
+        
+        function downloadMP4() {
+            if (recordedChunks.length === 0) { alert('No video recorded!'); return; }
+            
+            var blob = new Blob(recordedChunks, { type: 'video/webm' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'brownian_' + currentGeometry + '_' + Date.now() + '.webm';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            var statusEl = document.getElementById('export-status');
+            statusEl.style.display = 'block';
+            statusEl.textContent = 'Video downloaded! Size: ' + (blob.size / 1024 / 1024).toFixed(2) + ' MB';
+            
+            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        }
+        
+        function downloadHTML() {
+            if (recordedFrames.length === 0) { alert('No frames recorded!'); return; }
+            
+            var statusEl = document.getElementById('export-status');
+            statusEl.style.display = 'block';
+            statusEl.textContent = 'Creating HTML player...';
+            
+            var html = '<!DOCTYPE html><html><head><title>Brownian Recording</title>';
+            html += '<style>body{margin:0;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:monospace}';
+            html += '#player{max-width:90%;border-radius:8px}.info{color:#94a3b8;margin-top:16px}.controls{margin-top:12px}';
+            html += 'button{padding:8px 16px;margin:0 4px;border:none;border-radius:4px;cursor:pointer;background:#3b82f6;color:white}</style></head>';
+            html += '<body><img id="player"/><div class="info">Frame: <span id="f">1</span>/' + recordedFrames.length + ' | ' + (recordedFrames.length/30).toFixed(1) + 's @ ~30fps</div>';
+            html += '<div class="controls"><button id="pp">Pause</button></div>';
+            html += '<script>var frames=' + JSON.stringify(recordedFrames) + ';var i=0;var playing=true;var p=document.getElementById("player");var f=document.getElementById("f");var pp=document.getElementById("pp");';
+            html += 'function tick(){if(playing){p.src=frames[i];f.textContent=i+1;i=(i+1)%frames.length}setTimeout(tick,33)}';
+            html += 'pp.onclick=function(){playing=!playing;pp.textContent=playing?"Pause":"Play"};tick();<\/script></body></html>';
+            
+            var blob = new Blob([html], { type: 'text/html' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'brownian_' + currentGeometry + '_player_' + Date.now() + '.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            statusEl.textContent = 'HTML player downloaded! Size: ' + (blob.size / 1024 / 1024).toFixed(2) + ' MB';
+        }
+        
+        function clearRecording() {
+            recordedFrames = [];
+            recordedChunks = [];
+            document.getElementById('export-status').style.display = 'none';
+            updateUI();
+            updateRecordingInfo();
+        }
+        
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('geometry-type').addEventListener('change', function() {
+            updateGeometryUI();
+        });
+        
+        document.getElementById('n-slider').addEventListener('input', function(e) {
+            document.getElementById('n-value').textContent = e.target.value;
+        });
+        
+        document.getElementById('t-slider').addEventListener('input', function(e) {
+            document.getElementById('t-value').textContent = parseFloat(e.target.value).toFixed(2);
+        });
+        
+        document.getElementById('cyl-r-slider').addEventListener('input', function(e) {
+            document.getElementById('cyl-r-value').textContent = parseFloat(e.target.value).toFixed(2);
+        });
+        
+        document.getElementById('cyl-h-slider').addEventListener('input', function(e) {
+            document.getElementById('cyl-h-value').textContent = parseFloat(e.target.value).toFixed(2);
+        });
+        
+        document.getElementById('torus-param-type').addEventListener('change', function() {
+            updateTorusParamUI();
+        });
+        
+        document.getElementById('torus-R-slider').addEventListener('input', function(e) {
+            document.getElementById('torus-R-value').textContent = parseFloat(e.target.value).toFixed(2);
+            updateTorusInfo();
+        });
+        
+        document.getElementById('torus-r-slider').addEventListener('input', function(e) {
+            document.getElementById('torus-r-value').textContent = parseFloat(e.target.value).toFixed(2);
+            updateTorusInfo();
+        });
+        
+        document.getElementById('torus-ratio-slider').addEventListener('input', function(e) {
+            document.getElementById('torus-ratio-value').textContent = parseFloat(e.target.value).toFixed(2);
+            updateTorusInfo();
+        });
+        
+        document.getElementById('torus-scale-slider').addEventListener('input', function(e) {
+            document.getElementById('torus-scale-value').textContent = parseFloat(e.target.value).toFixed(2);
+            updateTorusInfo();
+        });
+        
+        document.getElementById('sigma-slider').addEventListener('input', function(e) {
+            document.getElementById('sigma-value').textContent = parseFloat(e.target.value).toFixed(2);
+            updateCouplingInfo();
+        });
+        
+        document.getElementById('p-slider').addEventListener('input', function(e) {
+            document.getElementById('p-value').textContent = parseFloat(e.target.value).toFixed(3);
+            updateCouplingInfo();
+        });
+        
+        document.getElementById('speed-slider').addEventListener('input', function(e) {
+            stepsPerFrame = parseInt(e.target.value);
+            document.getElementById('speed-value').textContent = stepsPerFrame;
+        });
+        
+        document.getElementById('color-mode').addEventListener('change', function(e) {
+            colorMode = e.target.value;
+            render();
+        });
+        
+        document.getElementById('show-labels').addEventListener('change', function(e) {
+            showLabels = e.target.checked;
+            render();
+        });
+        
+        document.getElementById('show-interactions').addEventListener('change', function(e) {
+            showInteractions = e.target.checked;
+            render();
+        });
+        
+        document.getElementById('fps-slider').addEventListener('input', function(e) {
+            targetFPS = parseInt(e.target.value);
+            document.getElementById('fps-value').textContent = targetFPS;
+        });
+        
+        document.getElementById('max-steps').addEventListener('change', function(e) {
+            maxSteps = parseInt(e.target.value);
+        });
+        
+        document.getElementById('coupling-type').addEventListener('change', function(e) {
+            var isGaussian = e.target.value === 'gaussian';
+            document.getElementById('sigma-group').style.display = isGaussian ? 'block' : 'none';
+            document.getElementById('p-group').style.display = isGaussian ? 'none' : 'block';
+            updateCouplingInfo();
+        });
+        
+        document.getElementById('init-type').addEventListener('change', function(e) {
+            document.getElementById('gauss-variance-group').style.display = e.target.value === 'gaussian' ? 'block' : 'none';
+            updateInitInfo();
+        });
+        
+        document.getElementById('gauss-variance-slider').addEventListener('input', function(e) {
+            document.getElementById('gauss-variance-value').textContent = parseFloat(e.target.value).toFixed(2);
+            updateInitInfo();
+        });
+        
+        document.getElementById('apply-btn').addEventListener('click', function() {
+            if (animationId) cancelAnimationFrame(animationId);
+            isRunning = false;
+            initSimulation();
+        });
+        
+        document.getElementById('play-btn').addEventListener('click', function() {
+            isRunning = !isRunning;
+            updateUI();
+            if (isRunning) {
+                lastFrameTime = 0;
+                requestAnimationFrame(animate);
+            }
+        });
+        
+        document.getElementById('stop-btn').addEventListener('click', function() {
+            isRunning = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            updateUI();
+        });
+        
+        document.getElementById('reset-btn').addEventListener('click', function() {
+            if (sim) {
+                sim.reset();
+                stepCount = 0;
+                isRunning = false;
+                updateUI();
+                updateStats();
+                render();
+            }
+        });
+        
+        document.getElementById('record-btn').addEventListener('click', function() {
+            if (!isRecording) startRecording();
+            else stopRecording();
+            updateUI();
+            updateRecordingInfo();
+        });
+        
+        document.getElementById('download-mp4-btn').addEventListener('click', downloadMP4);
+        document.getElementById('download-html-btn').addEventListener('click', downloadHTML);
+        document.getElementById('clear-btn').addEventListener('click', clearRecording);
+        
+        // ==================== ROTATION CONTROLS ====================
+        
+        function updateRotationSliders() {
+            var yDeg = Math.round(rotation.y * 180 / Math.PI);
+            var xDeg = Math.round(rotation.x * 180 / Math.PI);
+            document.getElementById('rot-y-slider').value = yDeg;
+            document.getElementById('rot-x-slider').value = xDeg;
+            document.getElementById('rot-y-value').textContent = yDeg + '°';
+            document.getElementById('rot-x-value').textContent = xDeg + '°';
+        }
+        
+        document.getElementById('rot-y-slider').addEventListener('input', function(e) {
+            var deg = parseInt(e.target.value);
+            rotation.y = deg * Math.PI / 180;
+            document.getElementById('rot-y-value').textContent = deg + '°';
+            render();
+        });
+        
+        document.getElementById('rot-x-slider').addEventListener('input', function(e) {
+            var deg = parseInt(e.target.value);
+            rotation.x = deg * Math.PI / 180;
+            document.getElementById('rot-x-value').textContent = deg + '°';
+            render();
+        });
+        
+        document.getElementById('auto-rotate').addEventListener('change', function(e) {
+            autoRotate = e.target.checked;
+            if (autoRotate && !isRunning) {
+                requestAnimationFrame(animateRotation);
+            }
+        });
+        
+        document.getElementById('reset-view-btn').addEventListener('click', function() {
+            rotation.y = 0.5;
+            rotation.x = 0.3;
+            updateRotationSliders();
+            render();
+        });
+        
+        document.getElementById('top-view-btn').addEventListener('click', function() {
+            rotation.y = 0;
+            rotation.x = Math.PI / 2;
+            updateRotationSliders();
+            render();
+        });
+        
+        document.getElementById('side-view-btn').addEventListener('click', function() {
+            rotation.y = 0;
+            rotation.x = 0;
+            updateRotationSliders();
+            render();
+        });
+        
+        // Mouse drag rotation on canvas
+        canvas.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            var deltaX = e.clientX - lastMouseX;
+            var deltaY = e.clientY - lastMouseY;
+            
+            rotation.y += deltaX * 0.01;
+            rotation.x += deltaY * 0.01;
+            
+            // Clamp vertical rotation
+            rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x));
+            
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            
+            updateRotationSliders();
+            render();
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+        
+        canvas.addEventListener('mouseenter', function() {
+            if (!isDragging) {
+                canvas.style.cursor = 'grab';
+            }
+        });
+        
+        canvas.addEventListener('mouseleave', function() {
+            if (!isDragging) {
+                canvas.style.cursor = 'default';
+            }
+        });
+        
+        // Touch support for mobile
+        canvas.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+                e.preventDefault();
+            }
+        });
+        
+        canvas.addEventListener('touchmove', function(e) {
+            if (!isDragging || e.touches.length !== 1) return;
+            
+            var deltaX = e.touches[0].clientX - lastMouseX;
+            var deltaY = e.touches[0].clientY - lastMouseY;
+            
+            rotation.y += deltaX * 0.01;
+            rotation.x += deltaY * 0.01;
+            rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotation.x));
+            
+            lastMouseX = e.touches[0].clientX;
+            lastMouseY = e.touches[0].clientY;
+            
+            updateRotationSliders();
+            render();
+            e.preventDefault();
+        });
+        
+        canvas.addEventListener('touchend', function() {
+            isDragging = false;
+        });
+        
+        // Auto-rotation animation (when simulation not running)
+        function animateRotation() {
+            if (autoRotate && !isRunning) {
+                rotation.y += autoRotateSpeed;
+                updateRotationSliders();
+                render();
+                requestAnimationFrame(animateRotation);
+            }
+        }
+        
+        // ==================== INITIALIZE ====================
+        updateRotationSliders();
+        initSimulation();
+    </script>
+</body>
+</html>
