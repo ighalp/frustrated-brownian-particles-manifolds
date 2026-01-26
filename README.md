@@ -113,11 +113,11 @@ where:
 If you use this code in your research, please cite:
 
 ```
-@article{halperin2025order,
+@article{halperin2026order,
   title={Order Out of Noise and Disorder: Fate of the Frustrated Manifold},
   author={Halperin, Igor},
   journal={arXiv preprint arXiv:XXXX.XXXXX},
-  year={2025}
+  year={2026}
 }
 ```
 
