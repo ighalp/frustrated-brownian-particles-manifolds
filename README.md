@@ -125,8 +125,9 @@ If you use this code in your research, please cite:
 @article{halperin2026order,
   title={Order Out of Noise and Disorder: Fate of the Frustrated Manifold},
   author={Halperin, Igor},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
-  year={2026}
+  journal={arXiv preprint arXiv:2601.18653},
+  year={2026},
+  url={https://arxiv.org/abs/2601.18653}
 }
 ```
 
