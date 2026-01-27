@@ -44,7 +44,7 @@ The type of symmetry breaking is determined by the **geometry and topology** of 
 │   ├── Dimension_reduction_on_the_sphere.gif
 │   ├── Dimension_reduction_on_the_cylinder.gif
 │   ├── Dimension_reduction_on_a_torus.gif
-│   └── combined_dimension_reduction.gif
+│   └── combined_optimized.gif
 ├── data/                           # Simulation output data (paper settings)
 │   ├── sphere/                     # Sphere geometry data
 │   ├── cylinder/                   # Cylinder geometry data
