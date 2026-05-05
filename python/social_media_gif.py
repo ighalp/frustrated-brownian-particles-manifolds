@@ -48,10 +48,17 @@ N = 200
 TEMPERATURE = 0.4
 SIGMA = 1.0
 DT = 0.005
-T_MIN = 0.02            # first recorded time (log axis)
-T_MAX = 35.0            # last recorded time per run
-N_FRAMES_PER_RUN = 110  # log-spaced frame times
-FPS = 14
+
+# Hybrid time sampling per run: dense log spacing through the
+# Big-Bang spread + ring formation, then linear spacing across the
+# long-time precession of the formed ring.
+T_MIN = 0.01
+T_SPLIT = 3.0           # boundary between the two phases
+T_MAX = 120.0
+N_FRAMES_LOG = 90       # frames in log-spaced [T_MIN, T_SPLIT]
+N_FRAMES_LIN = 130      # frames in linear-spaced (T_SPLIT, T_MAX]
+N_FRAMES_PER_RUN = N_FRAMES_LOG + N_FRAMES_LIN
+FPS = 16
 INIT_GAUSS_VARIANCE = 0.05
 
 RUN_SEEDS = [
@@ -171,8 +178,10 @@ def run_one(coupling_seed, init_seed):
     blob_dir /= np.linalg.norm(blob_dir)
     n_anchor = -blob_dir  # antipodal point as the starting orientation
 
-    # log-spaced target times
-    target_times = np.geomspace(T_MIN, T_MAX, N_FRAMES_PER_RUN)
+    # hybrid time sampling: log-spaced early, linear-spaced late
+    t_log = np.geomspace(T_MIN, T_SPLIT, N_FRAMES_LOG)
+    t_lin = np.linspace(T_SPLIT, T_MAX, N_FRAMES_LIN + 1)[1:]
+    target_times = np.concatenate([t_log, t_lin])
     n_steps_total = int(np.ceil(T_MAX / DT)) + 5
 
     # frame buffers
@@ -249,7 +258,7 @@ def make_animation(runs, raw_path):
         totE_hi = totE_lo + 1.0
 
     # ------------- figure ----------------
-    fig = plt.figure(figsize=(10.5, 5.9), dpi=100,
+    fig = plt.figure(figsize=(11.5, 6.0), dpi=100,
                      facecolor="#0f172a")
     fig.subplots_adjust(left=0.0, right=1.0, top=0.96,
                         bottom=0.10, wspace=0.0)
@@ -353,17 +362,17 @@ def make_animation(runs, raw_path):
 
         # trail of recent n_hat (only within the current run)
         run_id = all_run[frame]
-        # find first index of this run
         run_start = next(i for i, r in enumerate(all_run) if r == run_id)
-        start = max(run_start, frame - 60)
+        start = max(run_start, frame - 120)
         trail = all_n[start: frame + 1]
         trail_line.set_data(trail[:, 0], trail[:, 1])
         trail_line.set_3d_properties(trail[:, 2])
 
-        # gentle camera rotation
-        az = 25 + frame * 0.35
-        ax_L.view_init(elev=18, azim=az)
-        ax_R.view_init(elev=18, azim=az)
+        # camera: slow rotation plus a slight elevation oscillation
+        az = 25 + frame * 0.55
+        el = 18 + 8 * np.sin(2 * np.pi * frame / max(1, n_frames))
+        ax_L.view_init(elev=el, azim=az)
+        ax_R.view_init(elev=el, azim=az)
 
         info_text.set_text(
             f"run {run_id}/{len(runs)}    "
@@ -424,13 +433,17 @@ def main():
     print("Compressing ...")
     try:
         sz = compress_gif(raw_path, final_path,
-                          height=340, max_colors=128)
+                          height=380, max_colors=128)
         if sz > 9.5:
             print("Large; reducing colors/height ...")
             sz = compress_gif(raw_path, final_path,
-                              height=300, max_colors=96)
+                              height=340, max_colors=96)
         if sz > 9.5:
             print("Still large; reducing further ...")
+            sz = compress_gif(raw_path, final_path,
+                              height=300, max_colors=80)
+        if sz > 9.5:
+            print("Still large; final fallback ...")
             compress_gif(raw_path, final_path,
                          height=260, max_colors=64)
     except Exception as e:
